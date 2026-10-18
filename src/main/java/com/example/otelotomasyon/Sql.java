@@ -65,7 +65,21 @@ public class Sql {
                 FOREIGN KEY (rezervasyon_id) REFERENCES rezervasyon (rezervasyon_id) ON DELETE CASCADE,
                 FOREIGN KEY (musteri_id) REFERENCES musteri (musteri_id) ON DELETE RESTRICT
             )
-            """};
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS fatura(
+                fatura_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                rezervasyon_id INTEGER NOT NULL UNIQUE,
+                fatura_basligi TEXT NOT NULL,
+                vergi_no TEXT,
+                fatura_adresi TEXT NOT NULL,
+                toplam_tutar REAL NOT NULL,
+                fatura_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+                odeme_yontemi TEXT DEFAULT 'Nakit',
+                FOREIGN KEY (rezervasyon_id) REFERENCES rezervasyon (rezervasyon_id) ON DELETE RESTRICT
+            )
+            """
+        };
 
         try (Statement st = conn.createStatement()) {
             for (String sql : tablolar) {
@@ -185,9 +199,6 @@ public class Sql {
 
             pstmtm.setInt(1, rezervasyonId);
             pstmtm.setInt(2, musteriId);
-
-            System.out.println("Gönderilen Müşteri/Rezervasyon ID: " + musteriId);
-            System.out.println("Gönderilen Oda ID: " + rezervasyonId);
             pstmtm.executeUpdate();
         }
     }
@@ -245,5 +256,54 @@ public class Sql {
             }
         }
         return -1;
+    }
+
+    public int faturaKes(Fatura fatura)throws SQLException{
+        String sql = """
+                INSERT INTO fatura(
+                    rezervasyon_id,
+                    fatura_basligi,
+                    vergi_no,
+                    fatura_adresi,
+                    toplam_tutar,
+                    odeme_yontemi
+                )
+                VALUES(?, ?, ?, ?, ?, ?)
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            pstmt.setInt(1, fatura.getRezervasyonId());
+            pstmt.setString(2, fatura.getFaturaBasligi());
+            pstmt.setString(3, fatura.getVergiNo());
+            pstmt.setString(4, fatura.getFaturaAdresi());
+            pstmt.setDouble(5, fatura.getToplamTutar());
+            pstmt.setString(6, fatura.getOdemeYontemi());
+
+            pstmt.executeUpdate();
+
+            try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int olusanFaturaId = rs.getInt(1);
+                    fatura.setFaturaId(olusanFaturaId);
+                    return olusanFaturaId; // Taze ID'yi döndürüyoruz
+                }
+            }
+        }
+        return -1; // Bir aksilik olursa -1 döner
+    }
+
+    public double rezToplamUcretGetir(int rezId)throws SQLException{
+        String sql = "SELECT toplam_ucret FROM rezervasyon WHERE rezervasyon_id = ?";
+        try (Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setInt(1, rezId);
+            try(ResultSet rs = pstmt.executeQuery()){
+                if(rs.next()){
+                    return rs.getDouble("toplam_ucret");
+                }
+            }
+        }
+        return 0.0;
     }
 }
