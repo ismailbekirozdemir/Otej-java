@@ -39,6 +39,7 @@ public class Main {
                         3: Müşteri Ekle
                         4: Müşteri Misafir Ekle
                         5: Rezervasyon Ekle
+                        6: Fatura Göster
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -196,7 +197,13 @@ public class Main {
             gecelikUcret = Double.parseDouble(scan.nextLine());
 
             Rezervasyon rezervasyon = new Rezervasyon(musteriId, odaId, giris, cikis, gecelikUcret, false);
-            db.rezervasyonEkle(rezervasyon);
+
+            int yeniRezId = db.rezervasyonEkle(rezervasyon);
+            if(yeniRezId != -1) {
+                System.out.println("Rezervasyon Eklenemedi!");
+                return;
+            }
+            faturaKesmeEkrani(scan, db, yeniRezId, tcKimlik);
 
         }else{
             System.out.println("Seçilen tarihlerde bu oda dolu!");
@@ -213,6 +220,36 @@ public class Main {
             }catch (DateTimeException e){
                 System.out.println("Hatalı tarih formatı! Gün.Ay.Yıl formatında giriniz");
             }
+        }
+    }
+
+    public static void faturaKesmeEkrani(Scanner scan, Sql db, int rezId, String tcKimlik)throws SQLException{
+        System.out.println("Fatura Sahibi Ünvanını girin(Müşteri için Enter'a basın): ");
+        String faturaBasligi = scan.nextLine().trim();
+        if(faturaBasligi.isEmpty()){
+            faturaBasligi = db.musteriAdSoyadGetir(tcKimlik);
+        }
+
+        System.out.println("Kişiler için TcKimlik Şifketler için Vergi Kimlik Numarasını girin: ");
+        String vergiNo = scan.nextLine();
+
+        System.out.println("Fatura adresini girin: ");
+        String faturaAdresi = scan.nextLine();
+
+
+        double toplamTutar = db.rezToplamUcretGetir(rezId);
+
+        System.out.println("Ödeme Yöntemini girin(Metin Olarak):");
+        System.out.println("Nakit\nKredi Kartı\nHavale/EFT");
+        String odemeYontemi = scan.nextLine();
+
+        Fatura fatura = new Fatura(rezId, faturaBasligi, vergiNo, faturaAdresi, toplamTutar, odemeYontemi);
+        int faturaId = db.faturaKes(fatura);
+
+        if (faturaId != -1) {
+            System.out.println("Fatura başarıyla kesildi! Fatura No: #" + faturaId);
+        } else {
+            System.out.println("Hata: Fatura kesilemedi!");
         }
     }
 }

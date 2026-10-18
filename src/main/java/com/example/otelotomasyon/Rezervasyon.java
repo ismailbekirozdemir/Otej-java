@@ -11,6 +11,7 @@ public class Rezervasyon {
     private double toplamUcret;
     private boolean odendiMi;
     private String durum;
+    private int rezId;
 
     public Rezervasyon(int musteriId, int odaId, LocalDate girisTarihi,
                        LocalDate cikisTarihi, double gecelikUcret, boolean odendiMi){
@@ -80,4 +81,11 @@ public class Rezervasyon {
         this.cikisTarihi = cikisTarihi;
     }
 
+    public int getRezId() {
+        return rezId;
+    }
+
+    public void setRezId(int rezId) {
+        this.rezId = rezId;
+    }
 }

@@ -134,7 +134,7 @@ public class Sql {
         }
     }
 
-    public void rezervasyonEkle(@NotNull Rezervasyon rezervasyon) throws SQLException{
+    public int rezervasyonEkle(@NotNull Rezervasyon rezervasyon) throws SQLException{
         String sql = """
                 INSERT INTO rezervasyon(musteri_id, oda_id,
                     giris_tarihi, cikis_tarihi, toplam_ucret, odendi_mi)
@@ -142,7 +142,7 @@ public class Sql {
                 """;
 
         try(Connection conn = baglantiSagla();
-            PreparedStatement pstmtm = conn.prepareStatement(sql)){
+            PreparedStatement pstmtm = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
 
             pstmtm.setInt(1, rezervasyon.getMusteriId());
             pstmtm.setInt(2, rezervasyon.getOdaId());
@@ -152,7 +152,16 @@ public class Sql {
             pstmtm.setBoolean(6, rezervasyon.isOdendiMi());
 
             pstmtm.executeUpdate();
+
+            try(ResultSet rs = pstmtm.getGeneratedKeys()){
+                if(rs.next()){
+                    int olusanRezId = rs.getInt(1);
+                    rezervasyon.setRezId(olusanRezId);
+                    return olusanRezId;
+                }
+            }
         }
+        return -1;
     }
 
     public boolean odaMusaitMi(int odaId, LocalDate yeniGiris, LocalDate yeniCikis) throws SQLException {
@@ -305,5 +314,20 @@ public class Sql {
             }
         }
         return 0.0;
+    }
+
+    public String musteriAdSoyadGetir(String tcKimlik)throws SQLException{
+        String sql = "SELECT ad, soyad FROM musteri WHERE tc_kimlik = ?";
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, tcKimlik);
+
+            try(ResultSet rs = pstmt.executeQuery()){
+                if(rs.next()){
+                    return rs.getString("ad") + " " + rs.getString("soyad");
+                }
+            }
+        }
+        return "";
     }
 }
