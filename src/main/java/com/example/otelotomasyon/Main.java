@@ -40,6 +40,7 @@ public class Main {
                         4: Müşteri Misafir Ekle
                         5: Rezervasyon Ekle
                         6: Fatura Göster
+                        7: Oda Durum Değiştir
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -70,6 +71,10 @@ public class Main {
                         case 5:
                             rezervasyonEklemeEkrani(scan, db);
                             break;
+                        case 6:
+                            faturaGoruntulemeEkrani(scan, db);
+                        case 7:
+                            odaDuzenlemeEkrani(scan, db);
                         default:
                             System.out.println("Geçersiz seçim!");
                     }
@@ -197,13 +202,12 @@ public class Main {
             gecelikUcret = Double.parseDouble(scan.nextLine());
 
             Rezervasyon rezervasyon = new Rezervasyon(musteriId, odaId, giris, cikis, gecelikUcret, false);
-
-            int yeniRezId = db.rezervasyonEkle(rezervasyon);
-            if(yeniRezId != -1) {
+            rezervasyon.setRezId(db.rezervasyonEkle(rezervasyon));
+            if(rezervasyon.getRezId() != -1) {
                 System.out.println("Rezervasyon Eklenemedi!");
                 return;
             }
-            faturaKesmeEkrani(scan, db, yeniRezId, tcKimlik);
+            faturaKesmeEkrani(scan, db, rezervasyon);
 
         }else{
             System.out.println("Seçilen tarihlerde bu oda dolu!");
@@ -223,11 +227,11 @@ public class Main {
         }
     }
 
-    public static void faturaKesmeEkrani(Scanner scan, Sql db, int rezId, String tcKimlik)throws SQLException{
+    public static void faturaKesmeEkrani(Scanner scan, Sql db, Rezervasyon rez)throws SQLException{
         System.out.println("Fatura Sahibi Ünvanını girin(Müşteri için Enter'a basın): ");
         String faturaBasligi = scan.nextLine().trim();
         if(faturaBasligi.isEmpty()){
-            faturaBasligi = db.musteriAdSoyadGetir(tcKimlik);
+            faturaBasligi = db.musteriAdSoyadGetir(rez.getMusteriId());
         }
 
         System.out.println("Kişiler için TcKimlik Şifketler için Vergi Kimlik Numarasını girin: ");
@@ -237,13 +241,13 @@ public class Main {
         String faturaAdresi = scan.nextLine();
 
 
-        double toplamTutar = db.rezToplamUcretGetir(rezId);
+        double toplamTutar = rez.getToplamUcret();
 
         System.out.println("Ödeme Yöntemini girin(Metin Olarak):");
         System.out.println("Nakit\nKredi Kartı\nHavale/EFT");
         String odemeYontemi = scan.nextLine();
 
-        Fatura fatura = new Fatura(rezId, faturaBasligi, vergiNo, faturaAdresi, toplamTutar, odemeYontemi);
+        Fatura fatura = new Fatura(rez.getRezId(), faturaBasligi, vergiNo, faturaAdresi, toplamTutar, odemeYontemi);
         int faturaId = db.faturaKes(fatura);
 
         if (faturaId != -1) {
@@ -251,5 +255,53 @@ public class Main {
         } else {
             System.out.println("Hata: Fatura kesilemedi!");
         }
+    }
+
+    public static void faturaGoruntulemeEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("Fatura sahibinin Tc Kimlik numarasını girin");
+        String tcKimlik = scan.nextLine();
+        Fatura fatura = db.faturaGoruntule(tcKimlik);
+        if(fatura == null){
+            System.out.println("Bu Tc Kimlik numarasına ait Fatura yok");
+            return;
+        }
+        System.out.println(fatura.getFaturaId());
+        System.out.println(fatura.getRezervasyonId());
+        System.out.println(fatura.getFaturaBasligi());
+        System.out.println(fatura.getVergiNo());
+        System.out.println(fatura.getFaturaAdresi());
+        System.out.println(fatura.getToplamTutar());
+        System.out.println(fatura.getFaturaTarihi());
+        System.out.println(fatura.getOdemeYontemi());
+    }
+
+    public static void odaDuzenlemeEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("Odanın durumunu seçiniz");
+        System.out.println("1:Müşteri giriş yaptı\n2:Temizlik Bekliyor\n3:Müşteri çıkış yaptı\n(Sayı numarasını girin)");
+        int secim = Integer.parseInt(scan.nextLine());
+
+        System.out.println("Müşterinin adını girin");
+        String ad = scan.nextLine();
+        System.out.println("Müşteri soyadını girin");
+        String soyad = scan.nextLine();
+
+        String durum;
+        switch (secim){
+            case 1:
+                durum = "Dolu";
+                break;
+            case 2:
+                durum = "Temizlenecek";
+                break;
+            case 3:
+                durum = "Müsait";
+                break;
+            default:
+                System.out.println("Hatalı giriş yaptınız");
+                return;
+
+        }
+
+        db.odaDurumDuzenle(durum, ad, soyad);
     }
 }

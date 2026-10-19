@@ -316,11 +316,11 @@ public class Sql {
         return 0.0;
     }
 
-    public String musteriAdSoyadGetir(String tcKimlik)throws SQLException{
-        String sql = "SELECT ad, soyad FROM musteri WHERE tc_kimlik = ?";
+    public String musteriAdSoyadGetir(int musteriId)throws SQLException{
+        String sql = "SELECT ad, soyad FROM musteri WHERE musteri_id = ?";
         try(Connection conn = baglantiSagla();
             PreparedStatement pstmt = conn.prepareStatement(sql)){
-            pstmt.setString(1, tcKimlik);
+            pstmt.setInt(1, musteriId);
 
             try(ResultSet rs = pstmt.executeQuery()){
                 if(rs.next()){
@@ -330,4 +330,65 @@ public class Sql {
         }
         return "";
     }
+
+    public Fatura faturaGoruntule(String tcKimlik)throws SQLException{
+        String sql = """
+            SELECT f.*
+            FROM fatura f
+            JOIN rezervasyon r ON f.rezervasyon_id = r.rezervasyon_id
+            JOIN musteri m ON r.musteri_id = m.musteri_id
+            WHERE m.tc_kimlik = ?
+            ORDER BY f.fatura_id DESC
+            LIMIT 1
+            """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, tcKimlik);
+            try(ResultSet rs = pstmt.executeQuery()){
+                if(rs.next()){
+                    return new Fatura(
+                            rs.getInt("fatura_id"),
+                            rs.getInt("rezervasyon_id"),
+                            rs.getString("fatura_basligi"),
+                            rs.getString("vergi_no"),
+                            rs.getString("fatura_adresi"),
+                            rs.getDouble("toplam_tutar"),
+                            rs.getString("fatura_tarihi"),
+                            rs.getString("odeme_yontemi")
+                            );
+                }
+            }
+        }
+        return null;
+    }
+
+     public void odaDurumDuzenle(String durum, String ad, String soyad)throws SQLException{
+        String sql = """
+                UPDATE odalar
+                SET oda_durum = ?
+                WHERE oda_id = (
+                    SELECT r.oda_id
+                    FROM rezervasyon r
+                    JOIN musteri m ON r.musteri_id = m.musteri_id
+                    WHERE m.ad = ? AND m.soyad = ?
+                    ORDER BY  rezervasyon_id DESC
+                    LIMIT 1
+                    )
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, durum);
+            pstmt.setString(2, ad);
+            pstmt.setString(3, soyad);
+
+            int etkilenenSatir = pstmt.executeUpdate();
+
+            if(etkilenenSatir > 0){
+                System.out.println("Oda durumu güncellendi.");
+            }
+            else {
+                System.out.println("Müşteriye ait rezervasyon bulunamadı.");
+            }
+        }
+     }
 }
