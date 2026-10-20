@@ -39,9 +39,9 @@ public class Sql {
                 ad TEXT NOT NULL,
                 soyad TEXT NOT NULL,
                 tc_kimlik TEXT NOT NULL UNIQUE,
-                telefon TEXT NOT NULL,
+                telefon TEXT NOT NULL UNIQUE,
                 age INTEGER NOT NULL,
-                email TEXT
+                email TEXT UNIQUE
             )
             """, """
             CREATE TABLE IF NOT EXISTS rezervasyon (
@@ -362,24 +362,20 @@ public class Sql {
         return null;
     }
 
-     public void odaDurumDuzenle(String durum, String ad, String soyad)throws SQLException{
+    public void odaDurumDuzenle(String durum, String tcKimlik)throws SQLException{
         String sql = """
                 UPDATE odalar
                 SET oda_durum = ?
-                WHERE oda_id = (
-                    SELECT r.oda_id
-                    FROM rezervasyon r
-                    JOIN musteri m ON r.musteri_id = m.musteri_id
-                    WHERE m.ad = ? AND m.soyad = ?
-                    ORDER BY  rezervasyon_id DESC
-                    LIMIT 1
-                    )
+                FROM rezervasyon r
+                JOIN musteri m ON r.musteri_id = m.musteri_id
+                WHERE odalar.oda_id = r.oda_id
+                    AND m.tc_kimlik = ?
+                    AND r.durum != 'Iptal'
                 """;
         try(Connection conn = baglantiSagla();
             PreparedStatement pstmt = conn.prepareStatement(sql)){
             pstmt.setString(1, durum);
-            pstmt.setString(2, ad);
-            pstmt.setString(3, soyad);
+            pstmt.setString(2, tcKimlik);
 
             int etkilenenSatir = pstmt.executeUpdate();
 
@@ -391,4 +387,163 @@ public class Sql {
             }
         }
      }
+
+    public void odaDurumDuzenle(String durum, int rezId)throws SQLException{
+        String sql = """
+                UPDATE odalar
+                SET oda_durum = ?
+                WHERE oda_id = (
+                    SELECT oda_id
+                    FROM rezervasyon
+                    WHERE rezervasyon_id = ?
+                    )
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, durum);
+            pstmt.setInt(2, rezId);
+
+            int etkilenenSatir = pstmt.executeUpdate();
+
+            if(etkilenenSatir > 0){
+                System.out.println("Oda durumu güncellendi.");
+            }
+            else {
+                System.out.println("Müşteriye ait rezervasyon bulunamadı.");
+            }
+        }
+    }
+
+    public boolean musteriGirisYapti(String telefon)throws SQLException{
+        String sql = """
+                UPDATE rezervasyon
+                SET durum = 'Aktif'
+                WHERE rezervasyon_id = (
+                    SELECT r.rezervasyon_id
+                    FROM rezervasyon r
+                    JOIN musteri m ON r.musteri_id = m.musteri_id
+                    WHERE m.telefon = ? AND r.durum = 'Onaylandi'
+                    ORDER BY r.rezervasyon_id DESC
+                    LIMIT 1
+                )
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, telefon);
+            int etkilenen = pstmt.executeUpdate();
+
+            if(etkilenen > 0){
+                String odaSql = """
+                        UPDATE odalar
+                        SET oda_durum = 'Dolu'
+                        WHERE oda_id = (
+                            SELECT r.oda_id
+                            FROM rezervasyon r
+                            JOIN musteri m ON r.musteri_id = m.musteri_id
+                            WHERE m.telefon = ? AND r.durum = 'Aktif'
+                            ORDER BY r.rezervasyon_id DESC
+                            LIMIT 1
+                        )
+                        """;
+                try(PreparedStatement pstmtOda = conn.prepareStatement(odaSql)){
+                    pstmtOda.setString(1, telefon);
+                    pstmtOda.executeUpdate();
+                }
+                return true;
+            }
+        return false;
+        }
+    }
+
+    public boolean musteriCikisYapti(String telefon)throws SQLException{
+        String sqlRezervasyon = """
+                UPDATE rezervasyon
+                SET durum = 'Tamamlandı'
+                FROM musteri m
+                WHERE rezervasyon.musteri_id = m.musteri_id
+                    AND m.telefon = ?
+                    AND rezervasyon.durum = 'Aktif'
+                """;
+        String sqlOda = """
+                UPDATE odalar
+                SET oda_durum = 'Temizlenecek'
+                FROM rezervasyon r
+                JOIN musteri m ON r.musteri_id = m.musteri_id
+                WHERE odalar.oda_id = r.oda_id
+                    AND m.telefon = ?
+                    AND r.durum = 'Tamamlandı'
+                """;
+
+        try(Connection conn = baglantiSagla()){
+            conn.setAutoCommit(false);
+            try {
+                int etkilenenRez;
+                try(PreparedStatement pstmt = conn.prepareStatement(sqlRezervasyon)){
+                    pstmt.setString(1, telefon);
+                    etkilenenRez = pstmt.executeUpdate();
+                }
+
+                if(etkilenenRez > 0){
+                    try(PreparedStatement pstmt = conn.prepareStatement(sqlOda)){
+                        pstmt.setString(1, telefon);
+                        pstmt.executeUpdate();
+                    }
+                    conn.commit();
+                    return true;
+                }
+                else{
+                    conn.rollback();
+                    return false;
+                }
+            }catch (SQLException e){
+                conn.rollback();
+                throw e;
+            }
+            finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    public void temizlikTamamlandi(String odaNo)throws SQLException{
+        String sql = """
+                UPDATE odalar
+                SET oda_durum = 'Müsait'
+                WHERE oda_no = ?
+                """;
+
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, odaNo);
+            int etkilenen = pstmt.executeUpdate();
+            if(etkilenen == 0){
+                System.out.println("Girdiğiniz oda numarasına sahip oda yok");
+            }
+        }
+    }
+
+    public void gecikmisCikislariKapat() throws SQLException {
+        String sqlRez = """
+            UPDATE rezervasyon
+            SET durum = 'Tamamlandı'
+            WHERE durum = 'Aktif' AND cikis_tarihi < date('now')
+            """;
+
+        String sqlOda = """
+            UPDATE odalar
+            SET oda_durum = 'Temizlenecek'
+            WHERE oda_id IN (
+                SELECT oda_id FROM rezervasyon
+                WHERE durum = 'Tamamlandı' AND cikis_tarihi < date('now')
+            ) AND oda_durum = 'Dolu'
+            """;
+
+        try (Connection conn = baglantiSagla();
+             Statement st = conn.createStatement()) {
+            st.executeUpdate(sqlRez);
+            st.executeUpdate(sqlOda);
+        }
+    }
+
+    //Faturaya giriş çıkış her ikisi içinde seçenek ayarla ve çıkarken ödendimi kontrolü yap
 }

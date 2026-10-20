@@ -30,6 +30,8 @@ public class Main {
             Sql db = new Sql();
             System.out.println("Veritabanı bağlantısı başarılı ve tablolar hazır.");
 
+            db.gecikmisCikislariKapat();
+
             dongu:
             while (true){
                 System.out.println("""
@@ -41,6 +43,8 @@ public class Main {
                         5: Rezervasyon Ekle
                         6: Fatura Göster
                         7: Oda Durum Değiştir
+                        8: Müşteri giriş yaptı
+                        9: Müşteri çıkış yaptı
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -73,8 +77,16 @@ public class Main {
                             break;
                         case 6:
                             faturaGoruntulemeEkrani(scan, db);
+                            break;
                         case 7:
                             odaDuzenlemeEkrani(scan, db);
+                            break;
+                        case 8:
+                            musteriGirisEkrani(scan, db);
+                            break;
+                        case 9:
+                            musteriCikisEkrani(scan, db);
+                            break;
                         default:
                             System.out.println("Geçersiz seçim!");
                     }
@@ -203,7 +215,7 @@ public class Main {
 
             Rezervasyon rezervasyon = new Rezervasyon(musteriId, odaId, giris, cikis, gecelikUcret, false);
             rezervasyon.setRezId(db.rezervasyonEkle(rezervasyon));
-            if(rezervasyon.getRezId() != -1) {
+            if(rezervasyon.getRezId() == -1) {
                 System.out.println("Rezervasyon Eklenemedi!");
                 return;
             }
@@ -277,13 +289,12 @@ public class Main {
 
     public static void odaDuzenlemeEkrani(Scanner scan, Sql db)throws SQLException{
         System.out.println("Odanın durumunu seçiniz");
-        System.out.println("1:Müşteri giriş yaptı\n2:Temizlik Bekliyor\n3:Müşteri çıkış yaptı\n(Sayı numarasını girin)");
+        System.out.println("1:Müşteri giriş yaptı\n2:Temizlik Bekliyor\n3:Müsait      \n(Sayı numarasını girin)");
         int secim = Integer.parseInt(scan.nextLine());
 
-        System.out.println("Müşterinin adını girin");
-        String ad = scan.nextLine();
-        System.out.println("Müşteri soyadını girin");
-        String soyad = scan.nextLine();
+        System.out.println("Müşterinin Tc Kimlik numarasını girin");
+        String tcKimlik = scan.nextLine();
+
 
         String durum;
         switch (secim){
@@ -302,6 +313,24 @@ public class Main {
 
         }
 
-        db.odaDurumDuzenle(durum, ad, soyad);
+        db.odaDurumDuzenle(durum, tcKimlik);
+    }
+
+    public static void musteriGirisEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("Giriş yapan müşterinin telefon numarasını girin");
+        String telefon = scan.nextLine();
+        boolean a = db.musteriCikisYapti(telefon);
+        if(!a){
+            System.out.println("Bu telefon numarasına sahip rezervasyonu olan bir müşteri yok");
+        }
+    }
+
+    public static void musteriCikisEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("Çıkış yapan müşterinin telefon numarasını girin");
+        String telefon = scan.nextLine();
+        boolean a = db.musteriCikisYapti(telefon);
+        if(!a){
+            System.out.println("Bu telefon numarasına sahip rezervasyonu biten bir müşteri yok");
+        }
     }
 }

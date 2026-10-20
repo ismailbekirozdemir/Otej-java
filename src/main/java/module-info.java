@@ -5,6 +5,7 @@ module com.example.otelotomasyon {
     requires org.jetbrains.annotations;
     requires java.desktop;
     requires jdk.jdi;
+    requires jdk.jshell;
 
     opens com.example.otelotomasyon to javafx.fxml;
     exports com.example.otelotomasyon;
