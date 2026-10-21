@@ -252,6 +252,37 @@ public class Sql {
         return -1;
     }
 
+    public Rezervasyon rezervasyonGetirTelefonIle(String telefon)throws SQLException{
+        String sql = """
+                SELECT r.*
+                FROM rezervasyon r
+                JOIN musteri m ON r.musteri_id = m.musteri_id
+                WHERE m.telefon = ?
+                ORDER BY r.rezervasyon_id DESC
+                LIMIT 1
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1, telefon);
+            try(ResultSet rs = pstmt.executeQuery()){
+                if(rs.next()){
+                    LocalDate giris = rs.getObject("giris_tarihi", LocalDate.class);
+                    LocalDate cikis = rs.getObject("cikis_tarihi", LocalDate.class);
+
+                    return new Rezervasyon(
+                            rs.getInt("musteri_id"),
+                            rs.getInt("oda_id"),
+                            giris,
+                            cikis,
+                            rs.getDouble("gecelik_ucret"),
+                            rs.getBoolean("odendi_mi")
+                            );
+                }
+            }
+        }
+        return null;
+    }
+
     public int odaIdGetir(String odaNo)throws SQLException{
         String sql = "SELECT oda_id FROM odalar WHERE oda_no = ?";
         try (Connection conn = baglantiSagla();
@@ -295,11 +326,11 @@ public class Sql {
                 if (rs.next()) {
                     int olusanFaturaId = rs.getInt(1);
                     fatura.setFaturaId(olusanFaturaId);
-                    return olusanFaturaId; // Taze ID'yi döndürüyoruz
+                    return olusanFaturaId;
                 }
             }
         }
-        return -1; // Bir aksilik olursa -1 döner
+        return -1;
     }
 
     public double rezToplamUcretGetir(int rezId)throws SQLException{
@@ -331,19 +362,19 @@ public class Sql {
         return "";
     }
 
-    public Fatura faturaGoruntule(String tcKimlik)throws SQLException{
+    public Fatura faturaGoruntule(String telefon)throws SQLException{
         String sql = """
             SELECT f.*
             FROM fatura f
             JOIN rezervasyon r ON f.rezervasyon_id = r.rezervasyon_id
             JOIN musteri m ON r.musteri_id = m.musteri_id
-            WHERE m.tc_kimlik = ?
+            WHERE m.telefon = ?
             ORDER BY f.fatura_id DESC
             LIMIT 1
             """;
         try(Connection conn = baglantiSagla();
             PreparedStatement pstmt = conn.prepareStatement(sql)){
-            pstmt.setString(1, tcKimlik);
+            pstmt.setString(1, telefon);
             try(ResultSet rs = pstmt.executeQuery()){
                 if(rs.next()){
                     return new Fatura(
@@ -414,7 +445,7 @@ public class Sql {
         }
     }
 
-    public boolean musteriGirisYapti(String telefon)throws SQLException{
+    public boolean musteriGirisYapti(String telefon)throws SQLException {
         String sql = """
                 UPDATE rezervasyon
                 SET durum = 'Aktif'
@@ -427,12 +458,12 @@ public class Sql {
                     LIMIT 1
                 )
                 """;
-        try(Connection conn = baglantiSagla();
-            PreparedStatement pstmt = conn.prepareStatement(sql)){
+        try (Connection conn = baglantiSagla();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, telefon);
             int etkilenen = pstmt.executeUpdate();
 
-            if(etkilenen > 0){
+            if (etkilenen > 0) {
                 String odaSql = """
                         UPDATE odalar
                         SET oda_durum = 'Dolu'
@@ -445,13 +476,13 @@ public class Sql {
                             LIMIT 1
                         )
                         """;
-                try(PreparedStatement pstmtOda = conn.prepareStatement(odaSql)){
+                try (PreparedStatement pstmtOda = conn.prepareStatement(odaSql)) {
                     pstmtOda.setString(1, telefon);
                     pstmtOda.executeUpdate();
                 }
                 return true;
             }
-        return false;
+            return false;
         }
     }
 

@@ -45,6 +45,7 @@ public class Main {
                         7: Oda Durum Değiştir
                         8: Müşteri giriş yaptı
                         9: Müşteri çıkış yaptı
+                        10: Oda Temizlendi
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -86,6 +87,10 @@ public class Main {
                             break;
                         case 9:
                             musteriCikisEkrani(scan, db);
+                            break;
+                        case 10:
+                            System.out.println("Temizliği biten oda numarasını girin");
+                            db.temizlikTamamlandi(scan.nextLine());
                             break;
                         default:
                             System.out.println("Geçersiz seçim!");
@@ -219,8 +224,12 @@ public class Main {
                 System.out.println("Rezervasyon Eklenemedi!");
                 return;
             }
-            faturaKesmeEkrani(scan, db, rezervasyon);
+            System.out.print("Fatura girişte mi kesilsin? (E/H): ");
+            String cevap = scan.nextLine().trim();
 
+            if (cevap.equalsIgnoreCase("E")) {
+                faturaKesmeEkrani(scan, db, rezervasyon);
+            }
         }else{
             System.out.println("Seçilen tarihlerde bu oda dolu!");
         }
@@ -319,7 +328,7 @@ public class Main {
     public static void musteriGirisEkrani(Scanner scan, Sql db)throws SQLException{
         System.out.println("Giriş yapan müşterinin telefon numarasını girin");
         String telefon = scan.nextLine();
-        boolean a = db.musteriCikisYapti(telefon);
+        boolean a = db.musteriGirisYapti(telefon);
         if(!a){
             System.out.println("Bu telefon numarasına sahip rezervasyonu olan bir müşteri yok");
         }
@@ -331,6 +340,13 @@ public class Main {
         boolean a = db.musteriCikisYapti(telefon);
         if(!a){
             System.out.println("Bu telefon numarasına sahip rezervasyonu biten bir müşteri yok");
+            return;
+        }
+        Fatura fatura = db.faturaGoruntule(telefon);
+        if(fatura == null){
+            System.out.println("Müşteriye ait fatura bulunanamamıştır. Yeni fatura oluşturuluyor");
+            Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
+            faturaKesmeEkrani(scan, db, rez);
         }
     }
 }
