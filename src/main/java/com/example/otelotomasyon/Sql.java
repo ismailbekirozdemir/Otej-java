@@ -576,5 +576,32 @@ public class Sql {
         }
     }
 
-    //Faturaya giriş çıkış her ikisi içinde seçenek ayarla ve çıkarken ödendimi kontrolü yap
+    public void rezIptal(String telefon)throws SQLException {
+        String sqlRezId = """
+                SELECT r.rezervasyon_id
+                FROM rezervasyon r
+                JOIN musteri m ON r.musteri_id = m.musteri_id
+                WHERE telefon = ?
+                """;
+        String sqlIptal = """
+                UPDATE rezervasyon
+                SET durum = 'İptal'
+                WHERE rezervasyon_id = ?
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement pstmt = conn.prepareStatement(sqlRezId)) {
+            pstmt.setString(1, telefon);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int rezId = rs.getInt("rezervasyon_id");
+                    try (PreparedStatement pstmtIptal = conn.prepareStatement(sqlIptal)) {
+                        pstmtIptal.setInt(1, rezId);
+                        pstmtIptal.executeUpdate();
+                    }
+                }
+            }
+        }
+        //Faturaya giriş çıkış her ikisi içinde seçenek ayarla ve çıkarken ödendimi kontrolü yap
+    }
 }

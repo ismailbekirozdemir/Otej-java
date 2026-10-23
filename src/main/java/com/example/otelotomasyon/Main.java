@@ -46,6 +46,7 @@ public class Main {
                         8: Müşteri giriş yaptı
                         9: Müşteri çıkış yaptı
                         10: Oda Temizlendi
+                        11: Rezervasyon iptal
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -64,14 +65,7 @@ public class Main {
                             musteriEklemeEkrani(scan, db);
                             break;
                         case 4:
-                            int rezId = rezSahibiIdBulma(scan, db);
-                            if(rezId == -1) break;
-                            System.out.println("Kaç tane misafir eklenecek");
-                            int sayac = Integer.parseInt(scan.nextLine());
-                            for (int i = 0; i < sayac; i++) {
-                                int musteriId = musteriMisafirEklemeEkrani(scan, db);
-                                db.musteriMisafirEkle(musteriId, rezId);
-                            }
+                            misafirEklemeEkrani(scan, db);
                             break;
                         case 5:
                             rezervasyonEklemeEkrani(scan, db);
@@ -91,6 +85,9 @@ public class Main {
                         case 10:
                             System.out.println("Temizliği biten oda numarasını girin");
                             db.temizlikTamamlandi(scan.nextLine());
+                            break;
+                        case 11:
+                            rezIptalEkrani(scan, db);
                             break;
                         default:
                             System.out.println("Geçersiz seçim!");
@@ -347,6 +344,23 @@ public class Main {
             System.out.println("Müşteriye ait fatura bulunanamamıştır. Yeni fatura oluşturuluyor");
             Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
             faturaKesmeEkrani(scan, db, rez);
+        }
+    }
+
+    public static void rezIptalEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("İptal edilecek rezervasyon sahibinin telefon numarasını girin");
+        String telefon = scan.nextLine();
+        db.rezIptal(telefon);
+    }
+
+    public static void misafirEklemeEkrani(Scanner scan, Sql db)throws SQLException{
+        int rezId = rezSahibiIdBulma(scan, db);
+        if(rezId == -1) return;
+        System.out.println("Kaç tane misafir eklenecek");
+        int sayac = Integer.parseInt(scan.nextLine());
+        for (int i = 0; i < sayac; i++) {
+            int musteriId = musteriMisafirEklemeEkrani(scan, db);
+            db.musteriMisafirEkle(musteriId, rezId);
         }
     }
 }
