@@ -3,6 +3,8 @@ package com.example.otelotomasyon;
 import org.jetbrains.annotations.NotNull;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Sql {
     public Sql() throws SQLException {
@@ -557,7 +559,7 @@ public class Sql {
         String sqlRez = """
             UPDATE rezervasyon
             SET durum = 'Tamamlandı'
-            WHERE durum = 'Aktif' AND cikis_tarihi < date('now')
+            WHERE durum = 'Aktif' AND cikis_tarihi < date('now', 'localtime')
             """;
 
         String sqlOda = """
@@ -565,7 +567,7 @@ public class Sql {
             SET oda_durum = 'Temizlenecek'
             WHERE oda_id IN (
                 SELECT oda_id FROM rezervasyon
-                WHERE durum = 'Tamamlandı' AND cikis_tarihi < date('now')
+                WHERE durum = 'Tamamlandı' AND cikis_tarihi < date('now', 'localtime')
             ) AND oda_durum = 'Dolu'
             """;
 
@@ -582,6 +584,8 @@ public class Sql {
                 FROM rezervasyon r
                 JOIN musteri m ON r.musteri_id = m.musteri_id
                 WHERE telefon = ?
+                    AND r.durum != 'İptal'
+                ORDER BY r.rezervasyon_id DESC
                 """;
         String sqlIptal = """
                 UPDATE rezervasyon
@@ -602,6 +606,80 @@ public class Sql {
                 }
             }
         }
+    }
         //Faturaya giriş çıkış her ikisi içinde seçenek ayarla ve çıkarken ödendimi kontrolü yap
+    public int odendiMi(String telefon)throws SQLException{
+        String sql = """
+                SELECT odendi_mi
+                FROM rezervasyon r
+                JOIN musteri m ON r.musteri_id = m.musteri_id
+                WHERE m.telefon = ?
+                    AND r.cikis_tarihi = date('now', 'localtime')
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+            ps.setString(1, telefon);
+            try(ResultSet rs = ps.executeQuery()){
+                if(rs.next()){
+                    return rs.getInt("odendi_mi");
+                }
+            }
+        }
+        return 0;
+    }
+
+    public void borcOde(String telefon)throws SQLException{
+        String sql = """
+                UPDATE rezervasyon
+                SET odendi_mi = 1
+                WHERE musteri_id = (
+                    SELECT musteri_id
+                    FROM musteri
+                    WHERE telefon = ?
+                )
+                AND durum != 'İptal'
+                AND odendi_mi = 0
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+            ps.setString(1, telefon);
+            int etkilenen = ps.executeUpdate();
+            if(etkilenen > 0){
+                System.out.println(etkilenen + "Rezervasyonun ödemesi tamamlandı");
+            }else{
+                System.out.println("Ödenecek borç bulunamadı");
+            }
+        }
+    }
+
+    public List<String> borcGoruntule(String telefon)throws SQLException{
+        String sql = """
+                SELECT r.toplam_ucret, r.toplam_ucret,
+                       m.ad, m.soyad
+                FROM rezervasyon r
+                JOIN musteri m ON m.musteri_id = r.musteri_id
+                WHERE m.telefon = ?
+                    ANd r.durum != 'İptal'
+                    AND r.odendi_mi = 0
+                """;
+
+        List<String> borcList = new ArrayList<>();
+
+        try(Connection conn = baglantiSagla();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+            ps.setString(1, telefon);
+            try(ResultSet rs = ps.executeQuery()){
+                while (rs.next()) {
+                    int rezId = rs.getInt("rezervasyon_id");
+                    String adSoyad = rs.getString("ad") + " " + rs.getString("soyad");
+                    double ucret = rs.getDouble("toplam_ucret");
+
+                    String mesaj = rezId + " Numaralı rezervasyonun sahibi " + adSoyad +
+                            " adlı müşterinin " + ucret + " Tl kadar borcu vardır";
+                    borcList.add(mesaj);
+                }
+            }
+        }
+        return borcList;
     }
 }

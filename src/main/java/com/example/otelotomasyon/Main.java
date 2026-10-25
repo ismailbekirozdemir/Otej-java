@@ -2,6 +2,7 @@ package com.example.otelotomasyon;
 
 import java.sql.SQLException;
 import java.time.DateTimeException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +48,7 @@ public class Main {
                         9: Müşteri çıkış yaptı
                         10: Oda Temizlendi
                         11: Rezervasyon iptal
+                        12: Borç görüntüle
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -88,6 +90,9 @@ public class Main {
                             break;
                         case 11:
                             rezIptalEkrani(scan, db);
+                            break;
+                        case 12:
+                            borcGoruntulemeEkrani(scan, db);
                             break;
                         default:
                             System.out.println("Geçersiz seçim!");
@@ -345,6 +350,17 @@ public class Main {
             Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
             faturaKesmeEkrani(scan, db, rez);
         }
+
+        int odendiMi = db.odendiMi(telefon);
+        if(odendiMi == 0){
+            System.out.println("Müşteri ücretini ödememiştir");
+            db.borcOde(telefon);
+        } else if (odendiMi == 1) {
+            System.out.println("Müşterinin herhangi bir ödenecek ücreti bulunmamaktadır");
+        }
+        else{
+            System.out.println("Müşterinin borcuyla ilgili bir sorun var kontrol ediniz");
+        }
     }
 
     public static void rezIptalEkrani(Scanner scan, Sql db)throws SQLException{
@@ -361,6 +377,15 @@ public class Main {
         for (int i = 0; i < sayac; i++) {
             int musteriId = musteriMisafirEklemeEkrani(scan, db);
             db.musteriMisafirEkle(musteriId, rezId);
+        }
+    }
+
+    public static void borcGoruntulemeEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("Borcunu görüntülemek istediğiniz müşterinin telefon numarasını giriniz");
+        String telefon = scan.nextLine();
+        List<String> sonuclar =  db.borcGoruntule(telefon);
+        for(String bilgi : sonuclar){
+            System.out.println(bilgi);
         }
     }
 }
