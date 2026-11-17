@@ -1,5 +1,15 @@
 package com.example.otelotomasyon;
 
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
+import javafx.application.Application;
+import javafx.scene.Group;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import java.net.URL;
 import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.util.List;
@@ -12,12 +22,44 @@ import java.util.logging.SimpleFormatter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class Main {
+public class Main extends Application {
 
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
+    @Override
+    public void start(Stage stage)throws IOException{
+
+        String path = "/com/example/otelotomasyon/main-view.fxml";
+
+        URL url = Main.class.getResource(path);
+
+        if (url == null) {
+            throw new RuntimeException("FXML DOSYASI BULUNAMADI!");
+        }
+
+        FXMLLoader loader = new FXMLLoader(url);
+        Parent root = loader.load();
+
+        Scene scene = new Scene(root, 500, 500);
+
+        stage.setScene(scene);
+        stage.setTitle("Otel Otomasyon");
+
+        Image icon = new Image(
+                getClass().getResourceAsStream("/hotel-icon.png")
+        );
+
+        stage.getIcons().add(icon);
+
+        stage.setMinWidth(300);
+        stage.setMinHeight(300);
+
+        stage.show();
+    }
+
     public static void main(String[] args) {
-        try {
+        launch(args);
+       /* try {
             // true: Dosyanın üzerine yazmak yerine sonuna ekler (append)
             FileHandler fileHandler = new FileHandler("otel.log", true);
             fileHandler.setFormatter(new SimpleFormatter());
@@ -44,11 +86,11 @@ public class Main {
                         5: Rezervasyon Ekle
                         6: Fatura Göster
                         7: Oda Durum Değiştir
-                        8: Müşteri giriş yaptı
-                        9: Müşteri çıkış yaptı
+                        8: Müşteri Giriş Yaptı
+                        9: Müşteri Çıkış Yaptı
                         10: Oda Temizlendi
-                        11: Rezervasyon iptal
-                        12: Borç görüntüle
+                        11: Rezervasyon İptal
+                        12: Borç Görüntüle Ve Borç Öde
                         Seçiminiz:""");
                 try {
                     String secimGirdi = scan.nextLine().trim();
@@ -92,7 +134,7 @@ public class Main {
                             rezIptalEkrani(scan, db);
                             break;
                         case 12:
-                            borcGoruntulemeEkrani(scan, db);
+                            borcGoruntulemeVeOdemeEkrani(scan, db);
                             break;
                         default:
                             System.out.println("Geçersiz seçim!");
@@ -110,8 +152,9 @@ public class Main {
             System.out.println("Veritabanı başlatılamadı!");
             logger.log(Level.SEVERE, "Veritabanı başlatma hatası: " + e.getMessage(), e);
         }
+    */
     }
-
+    /*
     public static void musteriEklemeEkrani(Scanner scan, Sql db) throws SQLException{
         System.out.println("Veritabanı hazir.");
 
@@ -281,9 +324,9 @@ public class Main {
     }
 
     public static void faturaGoruntulemeEkrani(Scanner scan, Sql db)throws SQLException{
-        System.out.println("Fatura sahibinin Tc Kimlik numarasını girin");
-        String tcKimlik = scan.nextLine();
-        Fatura fatura = db.faturaGoruntule(tcKimlik);
+        System.out.println("Fatura sahibinin telefon numarasını girin");
+        String telefon = scan.nextLine();
+        Fatura fatura = db.faturaGoruntule(telefon);
         if(fatura == null){
             System.out.println("Bu Tc Kimlik numarasına ait Fatura yok");
             return;
@@ -350,11 +393,12 @@ public class Main {
             Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
             faturaKesmeEkrani(scan, db, rez);
         }
-
         int odendiMi = db.odendiMi(telefon);
         if(odendiMi == 0){
             System.out.println("Müşteri ücretini ödememiştir");
-            db.borcOde(telefon);
+            if(db.borcOde(telefon) > 0){
+                System.out.println("Ücret ödenmiştir");
+            }
         } else if (odendiMi == 1) {
             System.out.println("Müşterinin herhangi bir ödenecek ücreti bulunmamaktadır");
         }
@@ -380,12 +424,26 @@ public class Main {
         }
     }
 
-    public static void borcGoruntulemeEkrani(Scanner scan, Sql db)throws SQLException{
+    public static void borcGoruntulemeVeOdemeEkrani(Scanner scan, Sql db)throws SQLException{
         System.out.println("Borcunu görüntülemek istediğiniz müşterinin telefon numarasını giriniz");
         String telefon = scan.nextLine();
-        List<String> sonuclar =  db.borcGoruntule(telefon);
+        List<String> sonuclar = db.borcGoruntule(telefon);
         for(String bilgi : sonuclar){
             System.out.println(bilgi);
         }
+        System.out.println("Borcunuzu şuan ödemek istiyor musunuz (E/H)");
+        String secim = scan.nextLine();
+        if(secim.equals("E")){
+            borcOdemeEkrani(scan, db);
+        }
     }
+
+    public static void borcOdemeEkrani(Scanner scan, Sql db)throws SQLException{
+        System.out.println("Borcunu ödemek istediğiniz müşterinin telefon numarasını girin");
+        String telefon = scan.nextLine();
+        int sonuc = db.borcOde(telefon);
+        System.out.println(sonuc + " Kadar borc ödendi");
+    }
+
+*/
 }

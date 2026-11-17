@@ -3,6 +3,7 @@ package com.example.otelotomasyon;
 import org.jetbrains.annotations.NotNull;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -271,12 +272,16 @@ public class Sql {
                     LocalDate giris = rs.getObject("giris_tarihi", LocalDate.class);
                     LocalDate cikis = rs.getObject("cikis_tarihi", LocalDate.class);
 
+                    long gunSayisi = ChronoUnit.DAYS.between(giris, cikis);
+                    double toplamUCret = rs.getDouble("toplam_ucret");
+                    double gecelikUcret = toplamUCret / gunSayisi;
+
                     return new Rezervasyon(
                             rs.getInt("musteri_id"),
                             rs.getInt("oda_id"),
                             giris,
                             cikis,
-                            rs.getDouble("gecelik_ucret"),
+                            gecelikUcret,
                             rs.getBoolean("odendi_mi")
                             );
                 }
@@ -607,7 +612,7 @@ public class Sql {
             }
         }
     }
-        //Faturaya giriş çıkış her ikisi içinde seçenek ayarla ve çıkarken ödendimi kontrolü yap
+
     public int odendiMi(String telefon)throws SQLException{
         String sql = """
                 SELECT odendi_mi
@@ -628,7 +633,7 @@ public class Sql {
         return 0;
     }
 
-    public void borcOde(String telefon)throws SQLException{
+    public int borcOde(String telefon)throws SQLException{
         String sql = """
                 UPDATE rezervasyon
                 SET odendi_mi = 1
@@ -643,18 +648,13 @@ public class Sql {
         try(Connection conn = baglantiSagla();
             PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, telefon);
-            int etkilenen = ps.executeUpdate();
-            if(etkilenen > 0){
-                System.out.println(etkilenen + "Rezervasyonun ödemesi tamamlandı");
-            }else{
-                System.out.println("Ödenecek borç bulunamadı");
-            }
+            return ps.executeUpdate();
         }
     }
 
     public List<String> borcGoruntule(String telefon)throws SQLException{
         String sql = """
-                SELECT r.toplam_ucret, r.toplam_ucret,
+                SELECT r.toplam_ucret, r.rezervasyon_id,
                        m.ad, m.soyad
                 FROM rezervasyon r
                 JOIN musteri m ON m.musteri_id = r.musteri_id
