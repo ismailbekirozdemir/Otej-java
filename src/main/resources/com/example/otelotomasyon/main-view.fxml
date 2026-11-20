@@ -763,25 +763,21 @@
                                     <VBox spacing="4.0" styleClass="section-divider">
                                         <Label styleClass="card-title" text="Oda Durumu Düzenleme Paneli" />
                                         <Label styleClass="card-subtitle"
-                                               text="Müşteri T.C. Kimlik numarası, Rezervasyon ID veya Oda Numarası ile odanın durumunu değiştirin." />
+                                               text="Müşteri T.C. Kimlik numarası veya doğrudan Oda Numarası ile odanın durumunu değiştirin." />
                                     </VBox>
 
                                     <VBox spacing="6.0">
-                                        <Label styleClass="field-label" text="Müşteri T.C. Kimlik No (tc_kimlik) *" />
+                                        <Label styleClass="field-label" text="Müşteri T.C. Kimlik No (tc_kimlik)" />
                                         <TextField fx:id="txtOdaDuzenleTcKimlik"
                                                    promptText="Oda durumu güncellenecek müşterinin T.C. Kimlik numarası..." />
                                         <Label styleClass="field-hint"
-                                               text="Sql.odaDurumDuzenle(durum, tcKimlik) metodu için doğrudan kullanılır." />
+                                               text="Konaklayan müşterinin odasını güncellemek için T.C. Kimlik numarasını giriniz." />
                                     </VBox>
 
                                     <VBox spacing="6.0">
-                                        <Label styleClass="field-label" text="Alternatif: Rezervasyon ID veya Oda No (İsteğe Bağlı)" />
-                                        <HBox spacing="10.0">
-                                            <TextField fx:id="txtOdaDuzenleRezId" HBox.hgrow="ALWAYS"
-                                                       promptText="Rezervasyon ID (Örn: 14)" />
-                                            <TextField fx:id="txtOdaDuzenleOdaNo" HBox.hgrow="ALWAYS"
-                                                       promptText="Oda No (Örn: 101)" />
-                                        </HBox>
+                                        <Label styleClass="field-label" text="Alternatif: Oda Numarası (Boş / Bakımdaki Odalar İçin)" />
+                                        <TextField fx:id="txtOdaDuzenleOdaNo"
+                                                   promptText="Oda No (Örn: 101)" />
                                     </VBox>
 
                                     <VBox spacing="10.0" styleClass="card-subtle">

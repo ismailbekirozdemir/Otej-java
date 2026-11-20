@@ -36,7 +36,7 @@ public class Sql {
             )
             """, """
             CREATE TABLE IF NOT EXISTS musteri (
-                musteri_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                musteri_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
                 ad TEXT NOT NULL,
                 soyad TEXT NOT NULL,
                 tc_kimlik TEXT NOT NULL UNIQUE,
@@ -383,6 +383,7 @@ public class Sql {
             pstmt.setString(1, telefon);
             try(ResultSet rs = pstmt.executeQuery()){
                 if(rs.next()){
+                    LocalDate faturaTarihi = LocalDate.parse(rs.getString("fatura_tarihi"));
                     return new Fatura(
                             rs.getInt("fatura_id"),
                             rs.getInt("rezervasyon_id"),
@@ -390,8 +391,8 @@ public class Sql {
                             rs.getString("vergi_no"),
                             rs.getString("fatura_adresi"),
                             rs.getDouble("toplam_tutar"),
-                            rs.getString("fatura_tarihi"),
-                            rs.getString("odeme_yontemi")
+                            rs.getString("odeme_yontemi"),
+                            faturaTarihi
                             );
                 }
             }
@@ -424,6 +425,16 @@ public class Sql {
             }
         }
      }
+
+    public boolean odaDurumDuzenleOdaNoIle(String durum, String odaNo) throws SQLException {
+        String sql = "UPDATE odalar SET oda_durum = ? WHERE oda_no = ?";
+        try (Connection conn = baglantiSagla();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, durum);
+            pstmt.setString(2, odaNo);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
 
     public void odaDurumDuzenle(String durum, int rezId)throws SQLException{
         String sql = """
@@ -805,5 +816,39 @@ public class Sql {
             }
         }
         return 0.0;
+    }
+
+    public String musteriTcGetirMusteriIdIle(int musteriId)throws SQLException{
+        String sql = """
+                SELECT tc_kimlik
+                FROM musteri
+                WHERE musteri_id = ?
+                """;
+
+        try(Connection conn = baglantiSagla();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                return rs.getString("tc_kimlik");
+            }
+        }
+        return null;
+    }
+
+    public int odaNoGetirIdIle(int odaId)throws SQLException{
+        String sql = """
+                SELECT oda_no
+                FROM odalar
+                WHERE oda_id = ?
+                """;
+        try(Connection conn = baglantiSagla();
+            PreparedStatement ps = conn.prepareStatement(sql)){
+
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                return rs.getInt("oda_no");
+            }
+        }
+        return -1;
     }
 }

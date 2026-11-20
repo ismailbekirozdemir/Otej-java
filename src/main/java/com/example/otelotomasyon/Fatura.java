@@ -1,5 +1,7 @@
 package com.example.otelotomasyon;
 
+import java.time.LocalDate;
+
 public class Fatura {
     private int faturaId;
     private int rezervasyonId;
@@ -7,29 +9,24 @@ public class Fatura {
     private String vergiNo;
     private String faturaAdresi;
     private double toplamTutar;
-    private String faturaTarihi;
+    private LocalDate faturaTarihi;
     private String odemeYontemi;
 
     public Fatura(int rezervasyonId, String faturaBasligi, String vergiNo,
-                  String faturaAdresi, double toplamTutar, String odemeYontemi) {
+                  String faturaAdresi, double toplamTutar, String odemeYontemi, LocalDate faturaTarihi) {
         this.rezervasyonId = rezervasyonId;
         this.faturaBasligi = faturaBasligi;
         this.vergiNo = vergiNo;
         this.faturaAdresi = faturaAdresi;
         this.toplamTutar = toplamTutar;
         this.odemeYontemi = odemeYontemi;
+        this.faturaTarihi = faturaTarihi;
     }
 
     public Fatura(int faturaId, int rezervasyonId, String faturaBasligi, String vergiNo,
-                  String faturaAdresi, double toplamTutar, String faturaTarihi, String odemeYontemi) {
+                  String faturaAdresi, double toplamTutar, String odemeYontemi, LocalDate faturaTarihi) {
+        this(rezervasyonId, faturaBasligi, vergiNo, faturaAdresi, toplamTutar, odemeYontemi, faturaTarihi);
         this.faturaId = faturaId;
-        this.rezervasyonId = rezervasyonId;
-        this.faturaBasligi = faturaBasligi;
-        this.vergiNo = vergiNo;
-        this.faturaAdresi = faturaAdresi;
-        this.toplamTutar = toplamTutar;
-        this.faturaTarihi = faturaTarihi;
-        this.odemeYontemi = odemeYontemi;
     }
 
     public int getFaturaId() { return faturaId; }
@@ -50,8 +47,8 @@ public class Fatura {
     public double getToplamTutar() { return toplamTutar; }
     public void setToplamTutar(double toplamTutar) { this.toplamTutar = toplamTutar; }
 
-    public String getFaturaTarihi() { return faturaTarihi; }
-    public void setFaturaTarihi(String faturaTarihi) { this.faturaTarihi = faturaTarihi; }
+    public LocalDate getFaturaTarihi() { return faturaTarihi; }
+    public void setFaturaTarihi(LocalDate faturaTarihi) { this.faturaTarihi = faturaTarihi; }
 
     public String getOdemeYontemi() { return odemeYontemi; }
     public void setOdemeYontemi(String odemeYontemi) { this.odemeYontemi = odemeYontemi; }

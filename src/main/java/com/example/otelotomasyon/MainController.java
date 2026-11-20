@@ -203,7 +203,6 @@ public class MainController {
     // 7. ODA DÜZENLEME EKRANI BİLEŞENLERİ
     // =========================================================================
     @FXML private TextField txtOdaDuzenleTcKimlik;
-    @FXML private TextField txtOdaDuzenleRezId;
     @FXML private TextField txtOdaDuzenleOdaNo;
     @FXML private ToggleGroup grpOdaDurumSecim;
     @FXML private RadioButton rbOdaDurumDolu;
@@ -830,6 +829,10 @@ public class MainController {
     private void onMisafirTcKontrolAction() {
         // TODO: Sql.musteriIdGetirTcIle(tcKimlik) işlemi buraya bağlanacak
         String misafirTc = txtMisafirTc.getText().trim();
+        if(misafirTc.isEmpty()){
+            uyariGoster("Eksik bilgi", "Lütfen işlem yapan müşterinin Tc kimlik numarasını girin");
+            return;
+        }
         int musteriId = -1;
         try{
             musteriId = db.musteriIdGetirTcIle(misafirTc);
@@ -864,7 +867,7 @@ public class MainController {
         }catch (SQLException e){
             uyariGoster("Veritabani hatası", "" + e.getMessage());
         }
-        if(musteriID != -1){
+        if(musteriID == -1){
             String ad = txtMisafirAd.getText().trim();
             String soyad = txtMisafirSoyad.getText().trim();
             String telefon = txtMisafirTelefon.getText().trim();
@@ -937,7 +940,10 @@ public class MainController {
         String odaNo = txtRezOdaNo.getText().trim();
         LocalDate giris = dpRezGirisTarihi.getValue();
         LocalDate cikis = dpRezCikisTarihi.getValue();
-
+        if(odaNo.isEmpty() || giris == null || cikis == null){
+            uyariGoster("Eksik bilgi", "Lütfen müşterinin bilgilerini doğru ve eksiksiz girin");
+            return;
+        }
         int odaId = -1;
         boolean musait = false;
 
@@ -978,6 +984,9 @@ public class MainController {
                 String telefon = txtRezYeniTelefon.getText().trim();
                 String yasSt = txtRezYeniYas.getText().trim();
                 String eMail = txtRezYeniEmail.getText().trim();
+                if(eMail.isEmpty()){
+                    eMail = null;
+                }
                 int yas = Integer.parseInt(yasSt);
 
                 if(ad.isEmpty() || soyad.isEmpty() || telefon.isEmpty()){
@@ -1027,10 +1036,20 @@ public class MainController {
                 String adres = txtRezFaturaAdresi.getText().trim();
                 String odemeYontemi = cmbRezOdemeYontemi.getValue();
 
-                Fatura fatura = new Fatura(rezID, baslik, vergiNo, adres, rez.getToplamUcret(), odemeYontemi);
+                Fatura fatura = new Fatura(rezID, baslik, vergiNo, adres, rez.getToplamUcret(), odemeYontemi, LocalDate.now());
                 db.faturaKes(fatura);
             }
+            veritabanindanGuncelle();
+            String bilgiMesaji = "Rezervasyon No: " + rezID +
+                    "\nOda No: " + txtRezOdaNo.getText().trim() +
+                    "\nTarih: " + giris + " / " + cikis +
+                    "\nToplam Tutar: " + rez.getToplamUcret() + " TL";
 
+            if (giristeFaturaKesilsin) {
+                bilgiMesaji += "\n\nFatura girişte kesildi ve kaydedildi.";
+            }
+
+            bilgiGoster("Rezervasyon Başarılı", bilgiMesaji);
             onRezFormTemizleAction();
         } catch (SQLException e) {
             uyariGoster("Veritabanı hatası", e.getMessage());
@@ -1060,18 +1079,79 @@ public class MainController {
     @FXML
     private void onFaturaSorgulaAction() {
         // TODO: Sql.faturaGoruntule(telefon) işlemi buraya bağlanacak
+        String telefon = txtFaturaSorguTelefon.getText().trim();
+        if(telefon.isEmpty()){
+            uyariGoster("Eksik bilgi", "Lütfen fatura sorgusu yapan müşterinin telefon numarasını girin");
+            return;
+        }
+        try{
+            Fatura fatura = db.faturaGoruntule(telefon);
+            if(fatura == null){
+                uyariGoster("Fatura Hatası", "Bu numaraya ait fatura bulunamamıştır" + telefon);
+                return;
+            }
+            DateTimeFormatter trFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            lblFaturaId.setText("#" + fatura.getFaturaId());
+            lblFaturaRezId.setText("#" + fatura.getRezervasyonId());
+            lblFaturaTarihi.setText(fatura.getFaturaTarihi().format(trFormat));
+            lblFaturaBasligi.setText(fatura.getFaturaBasligi());
+            lblFaturaVergiNo.setText(fatura.getVergiNo());
+            lblFaturaAdresi.setText(fatura.getFaturaAdresi());
+            lblFaturaOdemeYontemi.setText(fatura.getOdemeYontemi());
+            lblFaturaToplamTutar.setText("₺" + fatura.getToplamTutar());
+            lblFaturaSorguDurum.setText("Fatura Bulundu");
+
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı hatası", "Fatura bulunamadı");
+        }
     }
 
     // --- 7. Oda Düzenleme Ekranı Butonları ---
     @FXML
     private void onOdaDurumGuncelleAction() {
-        // TODO: Sql.odaDurumDuzenle(durum, tcKimlik) veya Sql.odaDurumDuzenle(durum, rezId) bağlanacak
+        String tcKimlik = txtOdaDuzenleTcKimlik.getText().trim();
+        String odaNo = txtOdaDuzenleOdaNo.getText().trim();
+
+        if (tcKimlik.isEmpty() && odaNo.isEmpty()) {
+            uyariGoster("Eksik bilgi", "Lütfen müşterinin T.C. Kimlik numarasını veya Oda Numarasını girin.");
+            return;
+        }
+
+        String odaDurum = "";
+        if (rbOdaDurumDolu.isSelected()) {
+            odaDurum = "Dolu";
+        } else if (rbOdaDurumMusait.isSelected()) {
+            odaDurum = "Müsait";
+        } else if (rbOdaDurumTemizlenecek.isSelected()) {
+            odaDurum = "Temizlenecek";
+        } else if (rbOdaDurumBakimda.isSelected()) {
+            odaDurum = "Bakımda";
+        }
+
+        try {
+            if (!tcKimlik.isEmpty()) {
+                db.odaDurumDuzenle(odaDurum, tcKimlik);
+                listOdaDurumGecmisi.getItems().add(0, "T.C: " + tcKimlik + " → Yeni durum: " + odaDurum);
+            } else {
+                boolean guncellendi = db.odaDurumDuzenleOdaNoIle(odaDurum, odaNo);
+                if (!guncellendi) {
+                    uyariGoster("Oda Bulunamadı", "Oda " + odaNo + " veritabanında bulunamadı.");
+                    return;
+                }
+                listOdaDurumGecmisi.getItems().add(0, "Oda " + odaNo + " → Yeni durum: " + odaDurum);
+            }
+
+            veritabanindanGuncelle();
+            onOdaDuzenleTemizleAction();
+            bilgiGoster("Başarılı", "Oda durumu '" + odaDurum + "' olarak güncellendi.");
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı hatası", "Oda durumu güncellenemedi: " + e.getMessage());
+        }
     }
 
     @FXML
     private void onOdaDuzenleTemizleAction() {
         txtOdaDuzenleTcKimlik.clear();
-        txtOdaDuzenleRezId.clear();
         txtOdaDuzenleOdaNo.clear();
         rbOdaDurumDolu.setSelected(true);
     }
@@ -1080,22 +1160,123 @@ public class MainController {
     @FXML
     private void onMusteriGirisSorgulaAction() {
         // TODO: Telefon numarası ile onaylı rezervasyon önizleme sorgusu bağlanacak
+        String telefon = txtMusteriGirisTelefon.getText().trim();
+        if(telefon.isEmpty()){
+            uyariGoster("Eksik bilgi", "Lütfen giriş yapan müşterinin telefon numarasını girin");
+            return;
+        }
+        try{
+            Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
+            if(rez != null){
+                lblGirisMusteriAdSoyad.setText(db.musteriAdSoyadGetir(rez.getMusteriId()));
+                lblGirisAtananOdaNo.setText("Oda Id: " + rez.getOdaId());
+                lblGirisTarihAraligi.setText(rez.getGirisTarihi() + "/" + rez.getCikisTarihi());
+                lblGirisRezDurumBadge.setText("Onaylı • Girişe Hazır");
+            }
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı Hatası", "Veritabanına erişilemedi");
+        }
     }
 
     @FXML
     private void onMusteriGirisOnaylaAction() {
         // TODO: Sql.musteriGirisYapti(telefon) işlemi buraya bağlanacak
+        String telefon = txtMusteriGirisTelefon.getText().trim();
+        if(telefon.isEmpty()){
+            uyariGoster("Eksik bilgi", "Lütfen giriş yapan müşterinin telefon numarasını girin");
+            return;
+        }
+        try{
+            boolean basarili = db.musteriGirisYapti(telefon);
+            if(basarili){
+                veritabanindanGuncelle();
+            }
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı hatası", "Müşteri bilgilerine ulaşılamadı");
+        }
+
     }
 
     // --- 9. Müşteri Çıkış Yaptı (Check-Out) Ekranı Butonları ---
     @FXML
     private void onMusteriCikisSorgulaAction() {
         // TODO: Sql.rezervasyonGetirTelefonIle(telefon) ve Sql.odendiMi(telefon) kontrolü bağlanacak
+        String telefon = txtMusteriCikisTelefon.getText().trim();
+        if(telefon.isEmpty()){
+            uyariGoster("Eksik bilgi", "Lütfen giriş yapan müşterinin telefon numarasını girin");
+            return;
+        }
+        try {
+            Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
+            Fatura fatura = db.faturaGoruntule(telefon);
+            if(rez == null){
+                uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı");
+                return;
+            }
+            int odendiMi = db.odendiMi(telefon);
+
+            lblCikisMusteriVeOda.setText(db.musteriAdSoyadGetir(rez.getMusteriId()) + " • Oda ID: " + rez.getOdaId());
+            lblCikisToplamUcret.setText("₺" + rez.getToplamUcret());
+            lblCikisFaturaDurumu.setText(fatura != null ? "Fatura Kesilmiş" : "Fatura Kesilmemiş!");
+            lblCikisOdemeDurumu.setText(odendiMi == 1 ? "Ödendi" : "Ödenmedi(Borç Var)");
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı");
+        }
+
     }
 
     @FXML
     private void onMusteriCikisOnaylaAction() {
         // TODO: Sql.musteriCikisYapti(telefon), fatura kontrolü ve Sql.borcOde(telefon) bağlanacak
+        String telefon = txtMusteriCikisTelefon.getText().trim();
+        if(telefon.isEmpty()){
+            uyariGoster("Eksik bilgi", "Lütfen çıkış yapan müşterinin telefon numarasını girin");
+            return;
+        }
+        try{
+            boolean cikisBasarili = db.musteriCikisYapti(telefon);
+            if(!cikisBasarili){
+                uyariGoster("Müşteri Bulunamadı", "Bu telefon numarasına ait konaklama bulunamadı");
+                return;
+            }
+
+            Fatura fatura = db.faturaGoruntule(telefon);
+            if(fatura == null) {
+                Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
+                if (rez != null) {
+                    String baslik = txtCikisFaturaBaslik.getText().trim();
+                    if (baslik.isEmpty()) {
+                        baslik = db.musteriAdSoyadGetir(rez.getMusteriId());
+                    }
+                    String vergiNo = txtCikisVergiNo.getText().trim();
+                    if (vergiNo.isEmpty()) {
+                        String temp = db.musteriTcGetirMusteriIdIle(rez.getMusteriId());
+                        if (temp == null) {
+                            uyariGoster("Veritabanı Hatası", "Müşteri Tc numarası veritabanında bulunamadı");
+                            return;
+                        }
+                        vergiNo = temp;
+                    }
+                    String adres = txtCikisFaturaAdresi.getText().trim();
+                    if (adres.isEmpty()) {
+                        adres = "Belirtilmedi";
+                    }
+                    String odemeYontemi = cmbCikisOdemeYontemi.getValue();
+
+                    Fatura yeniFatura = new Fatura(rez.getRezId(), baslik, vergiNo, adres, rez.getToplamUcret(), odemeYontemi, LocalDate.now());
+                    db.faturaKes(yeniFatura);
+                }
+
+            }
+            if (db.odendiMi(telefon) == 0) {
+                db.borcOde(telefon);
+            }
+            veritabanindanGuncelle();
+            bilgiGoster("Check-Out Tamamlandı", "Müşteri çıkışı yapıldı, fatura/tahsilat kapatıldı ve oda temizliğe yönlendirildi.");
+
+        } catch (Exception e) {
+            uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı " + e.getMessage());
+        }
     }
 
     // --- 10. Oda Temizlendi Ekranı Butonları ---
@@ -1129,22 +1310,61 @@ public class MainController {
     @FXML
     private void onRezIptalSorgulaAction() {
         // TODO: Sql.rezervasyonGetirTelefonIle(telefon) ile iptal öncesi özet gösterimi bağlanacak
+        String telefon = txtRezIptalTelefon.getText().trim();
+
+        try{
+            Rezervasyon rez = db.rezervasyonGetirTelefonIle(telefon);
+            lblIptalEdilecekRezId.setText("#" + rez.getRezId());
+            lblIptalEdilecekMusteriOda.setText("#" + db.odaNoGetirIdIle(rez.getOdaId()));
+            lblIptalEdilecekTarihler.setText(rez.getGirisTarihi() + "-" + rez.getCikisTarihi());
+
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı " + e.getMessage());
+        }
     }
 
     @FXML
     private void onRezervasyonIptalOnaylaAction() {
         // TODO: Sql.rezIptal(telefon) işlemi buraya bağlanacak
+        String telefon = txtRezIptalTelefon.getText().trim();
+        try {
+            db.rezIptal(telefon);
+            listSonIptalEdilenler.getItems().add(0, "İptal Edildi • Tel: " + telefon);
+            veritabanindanGuncelle();
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı" + e.getMessage());
+        }
     }
 
     // --- 12. Borç Görüntüle ve Borç Öde Ekranı Butonları ---
     @FXML
     private void onBorcGoruntuleAction() {
         // TODO: Sql.borcGoruntule(telefon) işlemi buraya bağlanacak
+        String telefon = txtBorcSorguTelefon.getText().trim();
+        try{
+            List<String> borclar = db.borcGoruntule(telefon);
+
+            listMusteriBorclari.getItems().setAll(borclar);
+            lblBorcKayitAdedi.setText("Ödenmemiş " + borclar.size() + "adet kayıt");
+            txtBorcOdemeTelefon.setText(telefon);
+        } catch (SQLException e) {
+            uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı " + e.getMessage());
+        }
     }
 
     @FXML
     private void onBorcOdeOnaylaAction() {
         // TODO: Sql.borcOde(telefon) işlemi buraya bağlanacak
+        String telefon = txtBorcOdemeTelefon.getText().trim();
+
+        try {
+            int odenenSayisi = db.borcOde(telefon);
+            listMusteriBorclari.getItems().clear();
+            lblBorcToplamTutar.setText("₺0.00");
+            veritabanindanGuncelle();
+        }catch (SQLException e){
+            uyariGoster("Veritabanı Hatası", "Müşteri bilgilerine ulaşılamadı" + e.getMessage());
+        }
     }
 
     // =========================================================================
