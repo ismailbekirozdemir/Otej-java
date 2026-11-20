@@ -4,6 +4,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -40,19 +41,27 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(url);
         Parent root = loader.load();
 
-        Scene scene = new Scene(root, 500, 500);
+        Scene scene = new Scene(root, 1400, 860);
+        URL cssUrl = getClass().getResource("/com/example/otelotomasyon/app-theme.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
 
         stage.setScene(scene);
-        stage.setTitle("Otel Otomasyon");
+        stage.setTitle("Otel Otomasyon • Resepsiyon & Yönetim Sistemi");
 
-        Image icon = new Image(
-                getClass().getResourceAsStream("/hotel-icon.png")
-        );
-
-        stage.getIcons().add(icon);
-
-        stage.setMinWidth(300);
-        stage.setMinHeight(300);
+        try{
+            Image icon = new Image(
+                    getClass().getResourceAsStream("/hotel-icon.png")
+            );
+            stage.getIcons().add(icon);
+        }catch (NullPointerException e){
+            System.out.println(e.getMessage());
+        }
+        stage.setFullScreen(true);
+        stage.setFullScreenExitKeyCombination(KeyCombination.keyCombination("A"));
+        stage.setMinWidth(1024);
+        stage.setMinHeight(680);
 
         stage.show();
     }

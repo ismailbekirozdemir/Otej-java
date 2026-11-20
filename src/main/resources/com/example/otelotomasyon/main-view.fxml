@@ -1,14 +1,1197 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.example.otelotomasyon.MainController"
-            prefHeight="400.0" prefWidth="600.0">
+<BorderPane fx:id="rootPane" prefHeight="860.0" prefWidth="1400.0" styleClass="app-shell"
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.otelotomasyon.MainController">
 
-</AnchorPane>
+    <!-- ==========================================================================
+         SOL MENÜ ÇUBUĞU (SIDEBAR NAVIGATION)
+         ========================================================================== -->
+    <left>
+        <VBox prefWidth="265.0" styleClass="sidebar" BorderPane.alignment="CENTER">
+            <!-- Marka / Otel Başlığı -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="brand-box">
+                <Label styleClass="brand-badge" text="OT" />
+                <VBox spacing="2.0">
+                    <Label styleClass="brand-title" text="OTEL OTOMASYON" />
+                    <Label styleClass="brand-subtitle" text="Resepsiyon &amp; PMS Yönetim Sistemi" />
+                </VBox>
+            </HBox>
+
+            <!-- Navigasyon Butonları -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="sidebar-scroll" VBox.vgrow="ALWAYS">
+                <VBox spacing="3.0">
+                    <padding>
+                        <Insets bottom="12.0" left="10.0" right="10.0" top="6.0" />
+                    </padding>
+
+                    <Label styleClass="nav-section-label" text="GENEL BAKIŞ" />
+                    <Button fx:id="btnNavDashboard" maxWidth="Infinity" onAction="#showDashboard"
+                            styleClass="nav-btn, nav-btn-active" text="◈   Ana Ekran (Genel Bakış)" />
+
+                    <Label styleClass="nav-section-label" text="GİRİŞ / ÇIKIŞ HAREKETLERİ" />
+                    <Button fx:id="btnNavMusteriGiris" maxWidth="Infinity" onAction="#showMusteriGiris"
+                            styleClass="nav-btn" text="⇥   Müşteri Giriş Yaptı" />
+                    <Button fx:id="btnNavMusteriCikis" maxWidth="Infinity" onAction="#showMusteriCikis"
+                            styleClass="nav-btn" text="⇤   Müşteri Çıkış Yaptı" />
+
+                    <Label styleClass="nav-section-label" text="REZERVASYON İŞLEMLERİ" />
+                    <Button fx:id="btnNavRezervasyonEkle" maxWidth="Infinity" onAction="#showRezervasyonEkle"
+                            styleClass="nav-btn" text="＋   Rezervasyon Ekle" />
+                    <Button fx:id="btnNavRezervasyonIptal" maxWidth="Infinity" onAction="#showRezervasyonIptal"
+                            styleClass="nav-btn" text="✕   Rezervasyon İptal" />
+
+                    <Label styleClass="nav-section-label" text="MÜŞTERİ &amp; MİSAFİR KAYIT" />
+                    <Button fx:id="btnNavMusteriEkle" maxWidth="Infinity" onAction="#showMusteriEkle"
+                            styleClass="nav-btn" text="👤   Müşteri Ekle" />
+                    <Button fx:id="btnNavMisafirEkle" maxWidth="Infinity" onAction="#showMisafirEkle"
+                            styleClass="nav-btn" text="👥   Oda Arkadaşı (Misafir) Ekle" />
+
+                    <Label styleClass="nav-section-label" text="ODA &amp; KAT HİZMETLERİ" />
+                    <Button fx:id="btnNavOdaEkle" maxWidth="Infinity" onAction="#showOdaEkle"
+                            styleClass="nav-btn" text="⊞   Oda Ekle" />
+                    <Button fx:id="btnNavOdaDuzenle" maxWidth="Infinity" onAction="#showOdaDuzenle"
+                            styleClass="nav-btn" text="⚙   Oda Düzenleme" />
+                    <Button fx:id="btnNavOdaTemizlendi" maxWidth="Infinity" onAction="#showOdaTemizlendi"
+                            styleClass="nav-btn" text="✦   Oda Temizlendi" />
+
+                    <Label styleClass="nav-section-label" text="FİNANS &amp; MUHASEBE" />
+                    <Button fx:id="btnNavFaturaGoster" maxWidth="Infinity" onAction="#showFaturaGoster"
+                            styleClass="nav-btn" text="🧾   Fatura Gösterme" />
+                    <Button fx:id="btnNavBorcIslemleri" maxWidth="Infinity" onAction="#showBorcIslemleri"
+                            styleClass="nav-btn" text="₺   Borç Görüntüle ve Borç Öde" />
+                </VBox>
+            </ScrollPane>
+
+            <!-- Sol Alt Bar: Tema Değiştirici (Dark Mode Hazır) ve Çıkış -->
+            <VBox spacing="8.0" styleClass="sidebar-footer">
+                <Button fx:id="btnThemeToggle" maxWidth="Infinity" onAction="#onToggleThemeClick"
+                        styleClass="nav-btn-theme" text="☾   Koyu Tema (Dark Mode)" />
+                <Button fx:id="btnUygulamaCikis" maxWidth="Infinity" onAction="#onUygulamaCikisClick"
+                        styleClass="nav-btn-exit" text="⏻   Uygulamadan Çıkış" />
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ==========================================================================
+         MERKEZ ALAN: ÜST BİLGİ BARI + EKRAN GEÇİŞ YIĞINI (STACKPANE)
+         ========================================================================== -->
+    <center>
+        <BorderPane BorderPane.alignment="CENTER">
+
+            <!-- ÜST BAR (HEADER) -->
+            <top>
+                <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="topbar">
+                    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                        <Label fx:id="lblTopbarTitle" styleClass="topbar-title" text="Ana Ekran • Otel Genel Bakış" />
+                        <Label fx:id="lblTopbarSubtitle" styleClass="topbar-subtitle"
+                               text="Canlı oda doluluk durumu, günlük giriş/çıkış hareketleri ve finansal özet" />
+                    </VBox>
+                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                        <Label fx:id="lblDbBaglantiDurumu" styleClass="topbar-db-pill" text="● Veritabanı Hazır (Otel.db)" />
+                        <Label fx:id="lblGununTarihi" styleClass="topbar-pill" text="17.11.2026" />
+                        <Button onAction="#showRezervasyonEkle" styleClass="btn-primary" text="+ Hızlı Rezervasyon" />
+                    </HBox>
+                </HBox>
+            </top>
+
+            <!-- EKRANLARIN YER ALDIĞI STACKPANE -->
+            <center>
+                <StackPane fx:id="contentStack">
+
+                    <!-- ======================================================================
+                         1. ANA EKRAN (DASHBOARD - GENEL BAKIŞ & CANLI ODA TEMSİLLERİ)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewDashboard" fitToWidth="true" styleClass="content-scroll">
+                        <VBox spacing="22.0" styleClass="screen-container">
+
+                            <!-- Üst KPI İstatistik Kartları (6'lı Dinamik Grid) -->
+                            <GridPane hgap="16.0" vgap="16.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33" />
+                                </columnConstraints>
+
+                                <!-- KPI 1: Dolu / Boş Oda Sayısı -->
+                                <VBox spacing="8.0" styleClass="kpi-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label styleClass="kpi-label" text="DOLU / MÜSAİT ODA DURUMU" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                        <Label fx:id="lblDolulukYuzdeBadge" styleClass="badge, badge-occupied" text="58 Dolu" />
+                                    </HBox>
+                                    <HBox alignment="BASELINE_LEFT" spacing="10.0">
+                                        <Label fx:id="lblDoluOdaSayisi" styleClass="kpi-value-accent" text="7 Dolu" />
+                                        <Label styleClass="kpi-value" text="/" />
+                                        <Label fx:id="lblBosOdaSayisi" styleClass="kpi-value-success" text="5 Müsait" />
+                                    </HBox>
+                                    <ProgressBar fx:id="prgDolulukOrani" maxWidth="Infinity" progress="0.58" />
+                                    <Label fx:id="lblToplamOdaMeta" styleClass="kpi-meta" text="Veritabanındaki toplam kayıtlı oda: 12" />
+                                </VBox>
+
+                                <!-- KPI 2: Günlük Giriş Yapacak İnsan Sayısı -->
+                                <VBox spacing="8.0" styleClass="kpi-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label styleClass="kpi-label" text="BUGÜN GİRİŞ YAPACAK (CHECK-IN)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                        <Label styleClass="badge, badge-available" text="Beklenen Giriş" />
+                                    </HBox>
+                                    <HBox alignment="BASELINE_LEFT" spacing="8.0">
+                                        <Label fx:id="lblGunlukGirisInsanSayisi" styleClass="kpi-value" text="9 Misafir" />
+                                        <Label fx:id="lblGunlukGirisOdaSayisi" styleClass="kpi-meta" text="(4 Rezervasyon)" />
+                                    </HBox>
+                                    <Label fx:id="lblGunlukGirisDetay" styleClass="kpi-meta" text="Onaylı ve bugün check-in bekleyen misafir sayısı" />
+                                    <HBox>
+                                        <Button onAction="#showMusteriGiris" styleClass="btn-secondary" text="Check-In Ekranına Git →" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- KPI 3: Günlük Çıkış Yapacak İnsan Sayısı -->
+                                <VBox spacing="8.0" styleClass="kpi-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label styleClass="kpi-label" text="BUGÜN ÇIKIŞ YAPACAK (CHECK-OUT)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                        <Label styleClass="badge, badge-occupied" text="Beklenen Çıkış" />
+                                    </HBox>
+                                    <HBox alignment="BASELINE_LEFT" spacing="8.0">
+                                        <Label fx:id="lblGunlukCikisInsanSayisi" styleClass="kpi-value" text="6 Misafir" />
+                                        <Label fx:id="lblGunlukCikisOdaSayisi" styleClass="kpi-meta" text="(3 Oda)" />
+                                    </HBox>
+                                    <Label fx:id="lblGunlukCikisDetay" styleClass="kpi-meta" text="Çıkış tarihi bugün olan aktif konaklamalar" />
+                                    <HBox>
+                                        <Button onAction="#showMusteriCikis" styleClass="btn-secondary" text="Check-Out Ekranına Git →" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- KPI 4: Temizlenecek Oda Sayısı -->
+                                <VBox spacing="8.0" styleClass="kpi-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label styleClass="kpi-label" text="TEMİZLENECEK ODALAR (KAT HİZMETİ)" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                        <Label styleClass="badge, badge-cleaning" text="Temizlik Bekliyor" />
+                                    </HBox>
+                                    <Label fx:id="lblTemizlenecekOdaSayisi" styleClass="kpi-value-warning" text="3 Oda" />
+                                    <Label fx:id="lblTemizlenecekDetay" styleClass="kpi-meta" text="Çıkış yapılmış ve temizlik onayı bekleyen odalar" />
+                                    <HBox>
+                                        <Button onAction="#showOdaTemizlendi" styleClass="btn-secondary" text="Oda Temizlendi Bildir →" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- KPI 5: Bakım Yapılacak / Arızalı Oda & Görev Sayısı -->
+                                <VBox spacing="8.0" styleClass="kpi-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label styleClass="kpi-label" text="BAKIM / TEKNİK SERVİS DURUMU" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                        <Label styleClass="badge, badge-danger" text="Teknik Bakım" />
+                                    </HBox>
+                                    <Label fx:id="lblBakimYapilacakSayisi" styleClass="kpi-value-danger" text="1 Oda" />
+                                    <Label fx:id="lblBakimDetay" styleClass="kpi-meta" text="Bakımda olan veya durum güncellemesi bekleyen odalar" />
+                                    <HBox>
+                                        <Button onAction="#showOdaDuzenle" styleClass="btn-secondary" text="Oda Durumu Düzenle →" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- KPI 6: Günlük Ciro & Bekleyen Tahsilat -->
+                                <VBox spacing="8.0" styleClass="kpi-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label styleClass="kpi-label" text="GÜNLÜK CİRO &amp; FİNANSAL ÖZET" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                        <Label styleClass="badge, badge-available" text="Canlı Kasa" />
+                                    </HBox>
+                                    <Label fx:id="lblGunlukCiro" styleClass="kpi-value-success" text="₺28.450,00" />
+                                    <Label fx:id="lblBekleyenBorcToplam" styleClass="kpi-meta" text="Tahsilat bekleyen açık bakiye: ₺6.200,00" />
+                                    <HBox spacing="8.0">
+                                        <Button onAction="#showBorcIslemleri" styleClass="btn-secondary" text="Borç &amp; Tahsilat →" />
+                                        <Button onAction="#showFaturaGoster" styleClass="btn-secondary" text="Faturalar →" />
+                                    </HBox>
+                                </VBox>
+                            </GridPane>
+
+                            <!-- DB'deki Odaların Görsel Temsilleri (Canlı Oda Planı) -->
+                            <VBox spacing="16.0" styleClass="card">
+                                <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="section-divider">
+                                    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                        <Label styleClass="card-title" text="Veritabanındaki Odaların Canlı Temsili (Kat &amp; Oda Planı)" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Odalar tablosundan (odalar) dinamik olarak üretilen oda kartları. Filtreleyebilir veya oda kartına tıklayarak işlem yapabilirsiniz." />
+                                    </VBox>
+                                    <TextField fx:id="txtDashboardOdaAra" prefWidth="210.0" promptText="Oda No veya Tip Ara (Örn: 101)..." />
+                                    <Button fx:id="btnDashboardVeriYenile" onAction="#onDashboardYenileAction"
+                                            styleClass="btn-secondary" text="↻ Verileri Yenile" />
+                                    <Button onAction="#showOdaEkle" styleClass="btn-primary" text="+ Yeni Oda Ekle" />
+                                </HBox>
+
+                                <!-- Durum Filtre Çipleri -->
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <Label styleClass="field-label" text="Durum Filtresi:" />
+                                    <Button fx:id="btnFiltreTumu" onAction="#onFiltreTumuClick"
+                                            styleClass="filter-chip, filter-chip-active" text="Tümü" />
+                                    <Button fx:id="btnFiltreMusait" onAction="#onFiltreMusaitClick"
+                                            styleClass="filter-chip" text="● Müsait" />
+                                    <Button fx:id="btnFiltreDolu" onAction="#onFiltreDoluClick"
+                                            styleClass="filter-chip" text="● Dolu" />
+                                    <Button fx:id="btnFiltreTemizlenecek" onAction="#onFiltreTemizlenecekClick"
+                                            styleClass="filter-chip" text="● Temizlenecek" />
+                                    <Button fx:id="btnFiltreBakimda" onAction="#onFiltreBakimdaClick"
+                                            styleClass="filter-chip" text="● Bakımda" />
+                                </HBox>
+
+                                <!-- Dinamik Oda Kartları Konteyneri (Java/DB tarafından doldurulur) -->
+                                <FlowPane fx:id="flowOdaTemsilleri" hgap="14.0" vgap="14.0" prefWrapLength="1050.0" />
+                            </VBox>
+
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         2. ODA EKLEME EKRANI (Odalar.java & Sql.odaEkle)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewOdaEkle" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="48.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="52.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Yeni Oda Ekleme Formu -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Yeni Oda Tanımlama Formu" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Veritabanındaki 'odalar' tablosuna yeni bir oda kaydı ekleyin." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Oda Numarası (oda_no) *" />
+                                        <TextField fx:id="txtOdaEkleNo" promptText="Örn: 101, 204, 305..." />
+                                        <Label styleClass="field-hint" text="Kat ve kapı numarasını benzersiz olarak giriniz." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Oda Kapasitesi (oda_kapasite) *" />
+                                        <TextField fx:id="txtOdaEkleKapasite" promptText="Örn: 2, 3, 4..." />
+                                        <Label styleClass="field-hint" text="Odada konaklayabilecek maksimum misafir sayısı (Gecelik ücret rezervasyon girişinde belirlenir)." />
+                                    </VBox>
+
+                                    <Label fx:id="lblOdaEkleBilgi" styleClass="field-hint"
+                                           text="Not: Oda eklendiğinde ana ekrandaki oda haritasında otomatik temsil edilir." />
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnOdaEkleTemizle" onAction="#onOdaEkleFormTemizleAction"
+                                                styleClass="btn-secondary" text="Formu Temizle" />
+                                        <Button fx:id="btnOdaEkleKaydet" onAction="#onOdaEkleKaydetAction"
+                                                styleClass="btn-primary" text="＋ Odayı Veritabanına Ekle" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: Eklenen Odalar Listesi & Önizleme -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="1">
+                                    <HBox alignment="CENTER_LEFT" styleClass="section-divider">
+                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                            <Label styleClass="card-title" text="Kayıtlı Odalar Listesi" />
+                                            <Label styleClass="card-subtitle" text="Sistemde tanımlı odalar, kapasiteleri ve güncel durumları" />
+                                        </VBox>
+                                        <Label fx:id="lblKayitliOdaSayisiBadge" styleClass="badge, badge-neutral" text="0 Oda Kayıtlı" />
+                                    </HBox>
+
+                                    <ListView fx:id="listKayitliOdalar" prefHeight="390.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         3. MÜŞTERİ EKLEME EKRANI (Musteri.java & Sql.musteriEkle)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewMusteriEkle" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Müşteri Kayıt Formu -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Yeni Müşteri Kayıt Formu" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Kimlik ve iletişim bilgilerini girerek yeni müşteri profili oluşturun." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="T.C. Kimlik Numarası (tc_kimlik) *" />
+                                        <TextField fx:id="txtMusteriEkleTc" promptText="11 haneli T.C. Kimlik No giriniz..." />
+                                    </VBox>
+
+                                    <GridPane hgap="14.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                        </columnConstraints>
+                                        <VBox spacing="6.0" GridPane.columnIndex="0">
+                                            <Label styleClass="field-label" text="Ad (ad) *" />
+                                            <TextField fx:id="txtMusteriEkleAd" promptText="Örn: Ahmet" />
+                                        </VBox>
+                                        <VBox spacing="6.0" GridPane.columnIndex="1">
+                                            <Label styleClass="field-label" text="Soyad (soyad) *" />
+                                            <TextField fx:id="txtMusteriEkleSoyad" promptText="Örn: Yılmaz" />
+                                        </VBox>
+                                    </GridPane>
+
+                                    <GridPane hgap="14.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="65.0" />
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="35.0" />
+                                        </columnConstraints>
+                                        <VBox spacing="6.0" GridPane.columnIndex="0">
+                                            <Label styleClass="field-label" text="Telefon Numarası (telefon) *" />
+                                            <TextField fx:id="txtMusteriEkleTelefon" promptText="Örn: 0555 123 45 67" />
+                                        </VBox>
+                                        <VBox spacing="6.0" GridPane.columnIndex="1">
+                                            <Label styleClass="field-label" text="Yaş (age) *" />
+                                            <TextField fx:id="txtMusteriEkleYas" promptText="Örn: 32" />
+                                        </VBox>
+                                    </GridPane>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="E-Posta Adresi (email - İsteğe Bağlı)" />
+                                        <TextField fx:id="txtMusteriEkleEmail" promptText="ornek@eposta.com (Boş bırakılabilir)" />
+                                    </VBox>
+
+                                    <Label fx:id="lblMusteriEkleBilgi" styleClass="field-hint"
+                                           text="T.C. Kimlik ve Telefon numarası sistemde tekil (UNIQUE) olarak saklanır." />
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnMusteriEkleTemizle" onAction="#onMusteriEkleFormTemizleAction"
+                                                styleClass="btn-secondary" text="Temizle" />
+                                        <Button fx:id="btnMusteriEkleKaydet" onAction="#onMusteriEkleKaydetAction"
+                                                styleClass="btn-primary" text="👤 Müşteriyi Kaydet" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: Müşteri Rehberi / Son Kayıtlar -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="1">
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="section-divider">
+                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                            <Label styleClass="card-title" text="Müşteri Rehberi &amp; Son Kayıtlar" />
+                                            <Label styleClass="card-subtitle" text="Kayıtlı müşterileri T.C. veya telefon ile hızlıca inceleyin" />
+                                        </VBox>
+                                        <TextField fx:id="txtMusteriRehberAra" prefWidth="180.0" promptText="Müşteri ara..." />
+                                    </HBox>
+                                    <ListView fx:id="listKayitliMusteriler" prefHeight="390.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         4. MÜŞTERİLERİN ODA ARKADAŞI (MİSAFİR) EKLEME EKRANI
+                            (Sql.aktifRezervasyonIdGetirTcIle & Sql.musteriMisafirEkle)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewMisafirEkle" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="48.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="52.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: 1. Adım - Rezervasyon Sahibi Bulma & Oda Özeti -->
+                                <VBox spacing="16.0" GridPane.columnIndex="0">
+                                    <VBox spacing="14.0" styleClass="card">
+                                        <VBox spacing="4.0" styleClass="section-divider">
+                                            <Label styleClass="card-title" text="1. Adım: Asıl Rezervasyon Sahibini Bul" />
+                                            <Label styleClass="card-subtitle"
+                                                   text="Oda arkadaşı eklenecek aktif rezervasyonun sahibine ait T.C. Kimlik numarasını girin." />
+                                        </VBox>
+
+                                        <VBox spacing="6.0">
+                                            <Label styleClass="field-label" text="Rezervasyon Sahibi T.C. Kimlik No *" />
+                                            <HBox spacing="10.0">
+                                                <TextField fx:id="txtMisafirRezSahibiTc" HBox.hgrow="ALWAYS"
+                                                           promptText="Rezervasyon sahibinin 11 haneli T.C. No..." />
+                                                <Button fx:id="btnMisafirAktifRezBul" onAction="#onMisafirAktifRezBulAction"
+                                                        styleClass="btn-primary" text="Aktif Rezervasyonu Bul" />
+                                            </HBox>
+                                        </VBox>
+
+                                        <!-- Bulunan Rezervasyon Özet Kartı -->
+                                        <VBox spacing="10.0" styleClass="card-subtle">
+                                            <HBox alignment="CENTER_LEFT">
+                                                <Label styleClass="field-label" text="Bulunan Aktif Rezervasyon Bilgisi" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                                <Label fx:id="lblMisafirRezDurumBadge" styleClass="badge, badge-occupied" text="Sorgu Bekleniyor" />
+                                            </HBox>
+                                            <GridPane hgap="12.0" vgap="8.0">
+                                                <columnConstraints>
+                                                    <ColumnConstraints percentWidth="42.0" />
+                                                    <ColumnConstraints percentWidth="58.0" />
+                                                </columnConstraints>
+                                                <Label styleClass="card-subtitle" text="Rezervasyon ID:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                                <Label fx:id="lblMisafirBulunanRezId" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                                <Label styleClass="card-subtitle" text="Rezervasyon Sahibi:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                                <Label fx:id="lblMisafirBulunanRezSahibi" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                                <Label styleClass="card-subtitle" text="Oda No &amp; Kapasite:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                                <Label fx:id="lblMisafirBulunanOdaBilgi" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                                                <Label styleClass="card-subtitle" text="Giriş / Çıkış Tarihi:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                                <Label fx:id="lblMisafirBulunanTarihler" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                            </GridPane>
+                                        </VBox>
+                                    </VBox>
+
+                                    <!-- Odadaki Mevcut Misafirler Listesi -->
+                                    <VBox spacing="12.0" styleClass="card" VBox.vgrow="ALWAYS">
+                                        <Label styleClass="card-title" text="Bu Rezervasyona Ekli Oda Arkadaşları" />
+                                        <ListView fx:id="listRezervasyonMisafirleri" prefHeight="180.0" />
+                                    </VBox>
+                                </VBox>
+
+                                <!-- Sağ: 2. Adım - Oda Arkadaşı (Misafir) Bilgileri -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="1">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="2. Adım: Eklenecek Oda Arkadaşı (Misafir) Bilgileri" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Misafirin T.C. Kimlik numarasını sorgulayın. Kayıtlı değilse aşağıdaki bilgilerle otomatik müşteri kaydı oluşturulup odaya bağlanır." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Misafir T.C. Kimlik Numarası *" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtMisafirTc" HBox.hgrow="ALWAYS"
+                                                       promptText="Eklenecek oda arkadaşının T.C. Kimlik numarası..." />
+                                            <Button fx:id="btnMisafirTcKontrol" onAction="#onMisafirTcKontrolAction"
+                                                    styleClass="btn-secondary" text="Kayıt Sorgula" />
+                                        </HBox>
+                                        <Label fx:id="lblMisafirKayitDurumu" styleClass="field-hint"
+                                               text="Müşteri sistemde kayıtlıysa bilgileri otomatik gelir; değilse formu doldurun." />
+                                    </VBox>
+
+                                    <GridPane hgap="14.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                        </columnConstraints>
+                                        <VBox spacing="6.0" GridPane.columnIndex="0">
+                                            <Label styleClass="field-label" text="Misafir Adı *" />
+                                            <TextField fx:id="txtMisafirAd" promptText="Ad" />
+                                        </VBox>
+                                        <VBox spacing="6.0" GridPane.columnIndex="1">
+                                            <Label styleClass="field-label" text="Misafir Soyadı *" />
+                                            <TextField fx:id="txtMisafirSoyad" promptText="Soyad" />
+                                        </VBox>
+                                    </GridPane>
+
+                                    <GridPane hgap="14.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="65.0" />
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="35.0" />
+                                        </columnConstraints>
+                                        <VBox spacing="6.0" GridPane.columnIndex="0">
+                                            <Label styleClass="field-label" text="Telefon Numarası *" />
+                                            <TextField fx:id="txtMisafirTelefon" promptText="05XX XXX XX XX" />
+                                        </VBox>
+                                        <VBox spacing="6.0" GridPane.columnIndex="1">
+                                            <Label styleClass="field-label" text="Yaş *" />
+                                            <TextField fx:id="txtMisafirYas" promptText="Örn: 28" />
+                                        </VBox>
+                                    </GridPane>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="E-Posta (İsteğe Bağlı)" />
+                                        <TextField fx:id="txtMisafirEmail" promptText="misafir@eposta.com" />
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnMisafirFormTemizle" onAction="#onMisafirFormTemizleAction"
+                                                styleClass="btn-secondary" text="Alanları Temizle" />
+                                        <Button fx:id="btnMisafirOdayaEkle" onAction="#onMisafirOdayaEkleAction"
+                                                styleClass="btn-primary" text="👥 Oda Arkadaşı Olarak Rezervasyona Ekle" />
+                                    </HBox>
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         5. REZERVASYON EKLEME EKRANI (Rezervasyon.java & Sql.rezervasyonEkle)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewRezervasyonEkle" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="54.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="46.0" />
+                                </columnConstraints>
+
+                                <!-- Sol Sütun: Müşteri Seçimi ve Oda/Tarih Planlama -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Rezervasyon &amp; Konaklama Bilgileri" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Müşteri T.C. Kimlik numarası, oda numarası ve giriş-çıkış tarihlerini belirleyin." />
+                                    </VBox>
+
+                                    <!-- Müşteri T.C. Sorgu -->
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Müşteri T.C. Kimlik Numarası *" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtRezMusteriTc" HBox.hgrow="ALWAYS"
+                                                       promptText="11 Haneli T.C. Kimlik No..." />
+                                            <Button fx:id="btnRezMusteriSorgula" onAction="#onRezMusteriSorgulaAction"
+                                                    styleClass="btn-secondary" text="Müşteri Sorgula" />
+                                        </HBox>
+                                        <Label fx:id="lblRezMusteriSorguSonuc" styleClass="field-hint"
+                                               text="Müşteri kaydı yoksa aşağıdaki hızlı kayıt alanlarını doldurabilirsiniz." />
+                                    </VBox>
+
+                                    <!-- Hızlı Müşteri Alanları (Kayıt yoksa doldurulacak) -->
+                                    <VBox fx:id="boxRezYeniMusteriAlanlari" spacing="10.0" styleClass="card-subtle">
+                                        <Label styleClass="field-label" text="Müşteri Kimlik &amp; İletişim Detayları" />
+                                        <GridPane hgap="12.0" vgap="10.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                            </columnConstraints>
+                                            <TextField fx:id="txtRezYeniAd" promptText="Ad *" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                            <TextField fx:id="txtRezYeniSoyad" promptText="Soyad *" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                            <TextField fx:id="txtRezYeniTelefon" promptText="Telefon *" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                            <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                <TextField fx:id="txtRezYeniYas" prefWidth="85.0" promptText="Yaş *" />
+                                                <TextField fx:id="txtRezYeniEmail" HBox.hgrow="ALWAYS" promptText="E-Posta (Opsiyonel)" />
+                                            </HBox>
+                                        </GridPane>
+                                    </VBox>
+
+                                    <!-- Oda & Tarih Seçimi -->
+                                    <GridPane hgap="14.0" vgap="12.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                        </columnConstraints>
+
+                                        <VBox spacing="6.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                            <Label styleClass="field-label" text="Kalınacak Oda Numarası (oda_no) *" />
+                                            <TextField fx:id="txtRezOdaNo" promptText="Örn: 101" />
+                                        </VBox>
+
+                                        <VBox spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                            <Label styleClass="field-label" text="Gecelik Ücret (₺) *" />
+                                            <TextField fx:id="txtRezGecelikUcret" promptText="Örn: 2500.00" />
+                                        </VBox>
+
+                                        <VBox spacing="6.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                            <Label styleClass="field-label" text="Giriş Tarihi (giris_tarihi) *" />
+                                            <DatePicker fx:id="dpRezGirisTarihi" maxWidth="Infinity" promptText="GG.AA.YYYY" />
+                                        </VBox>
+
+                                        <VBox spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                            <Label styleClass="field-label" text="Çıkış Tarihi (cikis_tarihi) *" />
+                                            <DatePicker fx:id="dpRezCikisTarihi" maxWidth="Infinity" promptText="GG.AA.YYYY" />
+                                        </VBox>
+                                    </GridPane>
+
+                                    <HBox alignment="CENTER_LEFT" spacing="12.0">
+                                        <Button fx:id="btnRezMusaitlikKontrol" onAction="#onRezMusaitlikKontrolAction"
+                                                styleClass="btn-secondary" text="🔍 Tarih &amp; Oda Müsaitliğini Kontrol Et" />
+                                        <Label fx:id="lblRezMusaitlikDurumu" styleClass="badge, badge-neutral"
+                                               text="Müsaitlik henüz sorgulanmadı" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ Sütun: Ücret Hesaplama Özeti & Girişte Fatura Kesim Seçeneği -->
+                                <VBox spacing="18.0" GridPane.columnIndex="1">
+
+                                    <!-- Konaklama ve Tutar Özeti -->
+                                    <VBox spacing="12.0" styleClass="card">
+                                        <Label styleClass="card-title" text="Konaklama &amp; Tutar Özeti" />
+                                        <GridPane hgap="12.0" vgap="8.0" styleClass="card-subtle">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="50.0" />
+                                                <ColumnConstraints percentWidth="50.0" />
+                                            </columnConstraints>
+                                            <Label styleClass="card-subtitle" text="Toplam Konaklama Süresi:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                            <Label fx:id="lblRezHesaplananGun" styleClass="field-label" text="0 Gece" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                            <Label styleClass="card-subtitle" text="Gecelik Oda Ücreti:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                            <Label fx:id="lblRezOzetGecelik" styleClass="field-label" text="₺0,00" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                            <Label styleClass="field-label" text="TOPLAM REZERVASYON TUTARI:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                            <Label fx:id="lblRezHesaplananToplam" styleClass="kpi-value-accent" text="₺0,00" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        </GridPane>
+                                    </VBox>
+
+                                    <!-- Girişte Fatura Kesilsin Mi? (Main.java satır 277) -->
+                                    <VBox spacing="14.0" styleClass="card" VBox.vgrow="ALWAYS">
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="section-divider">
+                                            <CheckBox fx:id="chkRezGiristeFaturaKes" onAction="#onRezFaturaTercihDegisti"
+                                                      text="Fatura girişte (rezervasyon anında) kesilsin" />
+                                        </HBox>
+
+                                        <VBox fx:id="boxRezFaturaDetay" disable="true" spacing="10.0">
+                                            <VBox spacing="4.0">
+                                                <Label styleClass="field-label" text="Fatura Sahibi Ünvanı (fatura_basligi)" />
+                                                <TextField fx:id="txtRezFaturaBaslik"
+                                                           promptText="Boş bırakılırsa müşteri Ad Soyad kullanılır..." />
+                                            </VBox>
+                                            <GridPane hgap="12.0">
+                                                <columnConstraints>
+                                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                                </columnConstraints>
+                                                <VBox spacing="4.0" GridPane.columnIndex="0">
+                                                    <Label styleClass="field-label" text="T.C. / Vergi Kimlik No (vergi_no)" />
+                                                    <TextField fx:id="txtRezVergiNo" promptText="Vergi veya TC No" />
+                                                </VBox>
+                                                <VBox spacing="4.0" GridPane.columnIndex="1">
+                                                    <Label styleClass="field-label" text="Ödeme Yöntemi (odeme_yontemi)" />
+                                                    <ComboBox fx:id="cmbRezOdemeYontemi" maxWidth="Infinity" />
+                                                </VBox>
+                                            </GridPane>
+                                            <VBox spacing="4.0">
+                                                <Label styleClass="field-label" text="Fatura Adresi (fatura_adresi)" />
+                                                <TextArea fx:id="txtRezFaturaAdresi" prefRowCount="2"
+                                                          promptText="Açık fatura adresi..." wrapText="true" />
+                                            </VBox>
+                                        </VBox>
+
+                                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                            <Button fx:id="btnRezFormTemizle" onAction="#onRezFormTemizleAction"
+                                                    styleClass="btn-secondary" text="Temizle" />
+                                            <Button fx:id="btnRezervasyonOlustur" onAction="#onRezervasyonOlusturAction"
+                                                    styleClass="btn-primary" text="✓ Rezervasyonu Oluştur" />
+                                        </HBox>
+                                    </VBox>
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         6. FATURA GÖSTERME EKRANI (Fatura.java & Sql.faturaGoruntule)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewFaturaGoster" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+
+                            <!-- Üst Arama Çubuğu -->
+                            <HBox alignment="CENTER_LEFT" spacing="14.0" styleClass="card">
+                                <Label styleClass="field-label" text="Fatura Sahibi Telefon Numarası:" />
+                                <TextField fx:id="txtFaturaSorguTelefon" prefWidth="280.0"
+                                           promptText="Örn: 0555 123 45 67" />
+                                <Button fx:id="btnFaturaSorgula" onAction="#onFaturaSorgulaAction"
+                                        styleClass="btn-primary" text="🧾 Fatura Görüntüle" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblFaturaSorguDurum" styleClass="badge, badge-neutral"
+                                       text="Telefon numarası ile son kesilen faturayı sorgulayın" />
+                            </HBox>
+
+                            <!-- Fatura Belgesi Önizleme Kartı -->
+                            <VBox spacing="20.0" styleClass="invoice-paper">
+                                <HBox alignment="CENTER_LEFT" styleClass="invoice-header-band">
+                                    <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                        <Label styleClass="card-title" text="OTEL KONAKLAMA HİZMET FATURASI" />
+                                        <Label styleClass="card-subtitle" text="Resmi Muhasebe &amp; Fatura Kayıt Belgesi" />
+                                    </VBox>
+                                    <VBox alignment="CENTER_RIGHT" spacing="4.0">
+                                        <HBox alignment="CENTER_RIGHT" spacing="6.0">
+                                            <Label styleClass="card-subtitle" text="Fatura No (fatura_id):" />
+                                            <Label fx:id="lblFaturaId" styleClass="field-label" text="#-" />
+                                        </HBox>
+                                        <HBox alignment="CENTER_RIGHT" spacing="6.0">
+                                            <Label styleClass="card-subtitle" text="Rezervasyon No (rezervasyon_id):" />
+                                            <Label fx:id="lblFaturaRezId" styleClass="field-label" text="#-" />
+                                        </HBox>
+                                        <HBox alignment="CENTER_RIGHT" spacing="6.0">
+                                            <Label styleClass="card-subtitle" text="Fatura Tarihi (fatura_tarihi):" />
+                                            <Label fx:id="lblFaturaTarihi" styleClass="field-label" text="-" />
+                                        </HBox>
+                                    </VBox>
+                                </HBox>
+
+                                <GridPane hgap="20.0" vgap="14.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="ALWAYS" percentWidth="60.0" />
+                                        <ColumnConstraints hgrow="ALWAYS" percentWidth="40.0" />
+                                    </columnConstraints>
+
+                                    <VBox spacing="8.0" styleClass="card-subtle" GridPane.columnIndex="0">
+                                        <Label styleClass="kpi-label" text="FATURA KESİLEN MÜŞTERİ / KURUM BİLGİLERİ" />
+                                        <GridPane hgap="10.0" vgap="8.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="35.0" />
+                                                <ColumnConstraints percentWidth="65.0" />
+                                            </columnConstraints>
+                                            <Label styleClass="card-subtitle" text="Fatura Başlığı / Ünvan:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                            <Label fx:id="lblFaturaBasligi" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                            <Label styleClass="card-subtitle" text="T.C. / Vergi Kimlik No:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                            <Label fx:id="lblFaturaVergiNo" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                            <Label styleClass="card-subtitle" text="Fatura Adresi:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                            <Label fx:id="lblFaturaAdresi" styleClass="field-label" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        </GridPane>
+                                    </VBox>
+
+                                    <VBox alignment="CENTER_LEFT" spacing="10.0" styleClass="invoice-total-box" GridPane.columnIndex="1">
+                                        <Label styleClass="kpi-label" text="ÖDEME &amp; GENEL TOPLAM" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <Label styleClass="card-subtitle" text="Ödeme Yöntemi:" />
+                                            <Label fx:id="lblFaturaOdemeYontemi" styleClass="badge, badge-occupied" text="-" />
+                                        </HBox>
+                                        <Label styleClass="card-subtitle" text="Toplam Fatura Tutarı (toplam_tutar):" />
+                                        <Label fx:id="lblFaturaToplamTutar" styleClass="kpi-value-accent" text="₺0,00" />
+                                    </VBox>
+                                </GridPane>
+                            </VBox>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         7. ODA DÜZENLEME EKRANI (Sql.odaDurumDuzenle)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewOdaDuzenle" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="52.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="48.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Oda Durumu Değiştirme Paneli -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Oda Durumu Düzenleme Paneli" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Müşteri T.C. Kimlik numarası, Rezervasyon ID veya Oda Numarası ile odanın durumunu değiştirin." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Müşteri T.C. Kimlik No (tc_kimlik) *" />
+                                        <TextField fx:id="txtOdaDuzenleTcKimlik"
+                                                   promptText="Oda durumu güncellenecek müşterinin T.C. Kimlik numarası..." />
+                                        <Label styleClass="field-hint"
+                                               text="Sql.odaDurumDuzenle(durum, tcKimlik) metodu için doğrudan kullanılır." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Alternatif: Rezervasyon ID veya Oda No (İsteğe Bağlı)" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtOdaDuzenleRezId" HBox.hgrow="ALWAYS"
+                                                       promptText="Rezervasyon ID (Örn: 14)" />
+                                            <TextField fx:id="txtOdaDuzenleOdaNo" HBox.hgrow="ALWAYS"
+                                                       promptText="Oda No (Örn: 101)" />
+                                        </HBox>
+                                    </VBox>
+
+                                    <VBox spacing="10.0" styleClass="card-subtle">
+                                        <Label styleClass="field-label" text="Yeni Oda Durumunu Seçiniz *" />
+                                        <RadioButton fx:id="rbOdaDurumDolu" selected="true"
+                                                     text="1: Müşteri Giriş Yaptı  →  'Dolu'">
+                                            <toggleGroup>
+                                                <ToggleGroup fx:id="grpOdaDurumSecim" />
+                                            </toggleGroup>
+                                        </RadioButton>
+                                        <RadioButton fx:id="rbOdaDurumTemizlenecek" toggleGroup="$grpOdaDurumSecim"
+                                                     text="2: Temizlik Bekliyor  →  'Temizlenecek'" />
+                                        <RadioButton fx:id="rbOdaDurumMusait" toggleGroup="$grpOdaDurumSecim"
+                                                     text="3: Temiz / Kullanıma Hazır  →  'Müsait'" />
+                                        <RadioButton fx:id="rbOdaDurumBakimda" toggleGroup="$grpOdaDurumSecim"
+                                                     text="4: Teknik Servis / Arıza  →  'Bakımda'" />
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnOdaDuzenleTemizle" onAction="#onOdaDuzenleTemizleAction"
+                                                styleClass="btn-secondary" text="Temizle" />
+                                        <Button fx:id="btnOdaDurumGuncelle" onAction="#onOdaDurumGuncelleAction"
+                                                styleClass="btn-primary" text="⚙ Oda Durumunu Güncelle" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: Oda Durum Rehberi & Hızlı Durum Özeti -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="1">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Oda Durum Kodları &amp; İş Akışı" />
+                                        <Label styleClass="card-subtitle" text="Sistemdeki oda durumlarının anlamları ve geçiş kuralları" />
+                                    </VBox>
+
+                                    <VBox spacing="10.0" styleClass="card-subtle">
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <Label styleClass="badge, badge-available" text="Müsait" />
+                                            <Label styleClass="card-subtitle" text="Oda temizdir ve yeni rezervasyon/giriş için hazırdır." wrapText="true" />
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <Label styleClass="badge, badge-occupied" text="Dolu" />
+                                            <Label styleClass="card-subtitle" text="Müşteri giriş yapmıştır, odada aktif konaklama vardır." wrapText="true" />
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <Label styleClass="badge, badge-cleaning" text="Temizlenecek" />
+                                            <Label styleClass="card-subtitle" text="Müşteri çıkış yapmıştır, kat hizmetleri temizliği beklenmektedir." wrapText="true" />
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <Label styleClass="badge, badge-danger" text="Bakımda" />
+                                            <Label styleClass="card-subtitle" text="Teknik arıza veya tadilat nedeniyle geçici olarak kapalıdır." wrapText="true" />
+                                        </HBox>
+                                    </VBox>
+
+                                    <Label styleClass="field-label" text="Son Durum Güncelleme Kayıtları" />
+                                    <ListView fx:id="listOdaDurumGecmisi" prefHeight="200.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         8. MÜŞTERİ GİRİŞ YAPTI EKRANI (CHECK-IN - Sql.musteriGirisYapti)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewMusteriGiris" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Check-In İşlem Kartı -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Müşteri Giriş (Check-In) İşlemi" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Giriş yapan müşterinin telefon numarasını girerek rezervasyonu 'Aktif', odayı 'Dolu' durumuna geçirin." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Giriş Yapan Müşterinin Telefon Numarası *" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtMusteriGirisTelefon" HBox.hgrow="ALWAYS"
+                                                       promptText="Örn: 0555 123 45 67" />
+                                            <Button fx:id="btnMusteriGirisSorgula" onAction="#onMusteriGirisSorgulaAction"
+                                                    styleClass="btn-secondary" text="Rezervasyonu Kontrol Et" />
+                                        </HBox>
+                                    </VBox>
+
+                                    <!-- Onaylı Rezervasyon Özet Kutusu -->
+                                    <VBox spacing="10.0" styleClass="card-subtle">
+                                        <HBox alignment="CENTER_LEFT">
+                                            <Label styleClass="field-label" text="Onaylı Rezervasyon Özeti" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                                            <Label fx:id="lblGirisRezDurumBadge" styleClass="badge, badge-occupied" text="Bekleniyor" />
+                                        </HBox>
+                                        <GridPane hgap="10.0" vgap="8.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="40.0" />
+                                                <ColumnConstraints percentWidth="60.0" />
+                                            </columnConstraints>
+                                            <Label styleClass="card-subtitle" text="Müşteri Ad Soyad:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                            <Label fx:id="lblGirisMusteriAdSoyad" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                            <Label styleClass="card-subtitle" text="Atanan Oda No:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                            <Label fx:id="lblGirisAtananOdaNo" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                            <Label styleClass="card-subtitle" text="Giriş / Çıkış Tarihi:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                            <Label fx:id="lblGirisTarihAraligi" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        </GridPane>
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnMusteriGirisOnayla" onAction="#onMusteriGirisOnaylaAction"
+                                                styleClass="btn-success" text="⇥ Müşteri Giriş Yaptı Olarak İşaretle (Check-In)" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: Bugün Giriş Yapması Beklenenler -->
+                                <VBox spacing="14.0" styleClass="card" GridPane.columnIndex="1">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Bugün Giriş Beklenen Rezervasyonlar" />
+                                        <Label styleClass="card-subtitle" text="Durumu 'Onaylandi' olan ve girişi beklenen müşteriler" />
+                                    </VBox>
+                                    <ListView fx:id="listBugunGirisBeklenenler" prefHeight="340.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         9. MÜŞTERİ ÇIKIŞ YAPTI EKRANI (CHECK-OUT - Sql.musteriCikisYapti)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewMusteriCikis" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Müşteri Çıkış & Oda Boşaltma -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Müşteri Çıkış (Check-Out) İşlemi" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Çıkış yapan müşterinin telefon numarasını girin. Rezervasyon 'Tamamlandı', oda 'Temizlenecek' durumuna alınır." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Çıkış Yapan Müşterinin Telefon Numarası *" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtMusteriCikisTelefon" HBox.hgrow="ALWAYS"
+                                                       promptText="Örn: 0555 123 45 67" />
+                                            <Button fx:id="btnMusteriCikisSorgula" onAction="#onMusteriCikisSorgulaAction"
+                                                    styleClass="btn-secondary" text="Aktif Konaklamayı Bul" />
+                                        </HBox>
+                                    </VBox>
+
+                                    <!-- Konaklama, Fatura ve Ödeme Kontrol Özeti -->
+                                    <VBox spacing="10.0" styleClass="card-subtle">
+                                        <Label styleClass="field-label" text="Çıkış Öncesi Fatura &amp; Borç Kontrolü" />
+                                        <GridPane hgap="10.0" vgap="8.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="42.0" />
+                                                <ColumnConstraints percentWidth="58.0" />
+                                            </columnConstraints>
+                                            <Label styleClass="card-subtitle" text="Konaklayan Müşteri / Oda:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                            <Label fx:id="lblCikisMusteriVeOda" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                            <Label styleClass="card-subtitle" text="Toplam Konaklama Ücreti:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                            <Label fx:id="lblCikisToplamUcret" styleClass="field-label" text="₺0,00" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                            <Label styleClass="card-subtitle" text="Fatura Durumu:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                            <Label fx:id="lblCikisFaturaDurumu" styleClass="badge, badge-neutral" text="Kontrol Edilmedi" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                                            <Label styleClass="card-subtitle" text="Ödeme / Borç Durumu:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                            <Label fx:id="lblCikisOdemeDurumu" styleClass="badge, badge-neutral" text="Kontrol Edilmedi" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        </GridPane>
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnMusteriCikisOnayla" onAction="#onMusteriCikisOnaylaAction"
+                                                styleClass="btn-primary" text="⇤ Müşteri Çıkış Yaptı (Check-Out Tamamla)" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: Çıkışta Fatura Kesilmemişse Hızlı Fatura Kesim Alanı -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="1">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Çıkış Esnasında Fatura &amp; Tahsilat Bilgileri" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Müşteriye ait fatura henüz kesilmemişse çıkış işleminde bu bilgilerle otomatik fatura kesilir." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Fatura Sahibi Ünvanı (Boş ise Müşteri Ad Soyad)" />
+                                        <TextField fx:id="txtCikisFaturaBaslik" promptText="Müşteri Ad Soyad veya Şirket Ünvanı..." />
+                                    </VBox>
+
+                                    <GridPane hgap="12.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                        </columnConstraints>
+                                        <VBox spacing="6.0" GridPane.columnIndex="0">
+                                            <Label styleClass="field-label" text="T.C. / Vergi Kimlik No" />
+                                            <TextField fx:id="txtCikisVergiNo" promptText="T.C. veya VKN" />
+                                        </VBox>
+                                        <VBox spacing="6.0" GridPane.columnIndex="1">
+                                            <Label styleClass="field-label" text="Ödeme Yöntemi" />
+                                            <ComboBox fx:id="cmbCikisOdemeYontemi" maxWidth="Infinity" />
+                                        </VBox>
+                                    </GridPane>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Fatura Adresi" />
+                                        <TextArea fx:id="txtCikisFaturaAdresi" prefRowCount="3"
+                                                  promptText="Fatura adresi giriniz..." wrapText="true" />
+                                    </VBox>
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         10. ODA TEMİZLENDİ EKRANI (Sql.temizlikTamamlandi)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewOdaTemizlendi" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="46.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="54.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Temizlik Onay Formu -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Oda Temizlendi Bildirimi" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Temizliği tamamlanan odanın numarasını girerek durumunu tekrar 'Müsait' konumuna getirin." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Temizliği Biten Oda Numarası (oda_no) *" />
+                                        <TextField fx:id="txtTemizlikBitenOdaNo"
+                                                   promptText="Örn: 102, 205 (Yandaki listeden de seçebilirsiniz)" />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Kat Hizmetleri Notu (İsteğe Bağlı)" />
+                                        <TextArea fx:id="txtTemizlikNotu" prefRowCount="3"
+                                                  promptText="Minibar kontrol edildi, çarşaflar değiştirildi vb." wrapText="true" />
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnOdaTemizlendiOnayla" onAction="#onOdaTemizlendiOnaylaAction"
+                                                styleClass="btn-success" text="✦ Temizlik Tamamlandı (Odayı Müsait Yap)" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: Temizlik Bekleyen Odalar Listesi -->
+                                <VBox spacing="14.0" styleClass="card" GridPane.columnIndex="1">
+                                    <HBox alignment="CENTER_LEFT" styleClass="section-divider">
+                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                            <Label styleClass="card-title" text="Temizlik Bekleyen Odalar ('Temizlenecek')" />
+                                            <Label styleClass="card-subtitle" text="Çıkış yapılmış ve kat hizmetleri onayı bekleyen odalar" />
+                                        </VBox>
+                                        <Label fx:id="lblTemizlikBekleyenSayacBadge" styleClass="badge, badge-cleaning" text="3 Oda Bekliyor" />
+                                    </HBox>
+                                    <ListView fx:id="listTemizlikBekleyenOdalar" prefHeight="330.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         11. REZERVASYON İPTAL EKRANI (Sql.rezIptal)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewRezervasyonIptal" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="52.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="48.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Rezervasyon İptal Formu -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Rezervasyon İptal İşlemi" />
+                                        <Label styleClass="card-subtitle"
+                                               text="İptal edilecek rezervasyon sahibinin telefon numarasını girerek aktif rezervasyonunu iptal edin." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Rezervasyon Sahibinin Telefon Numarası *" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtRezIptalTelefon" HBox.hgrow="ALWAYS"
+                                                       promptText="Örn: 0555 123 45 67" />
+                                            <Button fx:id="btnRezIptalSorgula" onAction="#onRezIptalSorgulaAction"
+                                                    styleClass="btn-secondary" text="Rezervasyonu Bul" />
+                                        </HBox>
+                                    </VBox>
+
+                                    <VBox spacing="10.0" styleClass="card-danger-zone">
+                                        <Label styleClass="field-label" text="İptal Edilecek Rezervasyon Özeti" />
+                                        <GridPane hgap="10.0" vgap="6.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints percentWidth="40.0" />
+                                                <ColumnConstraints percentWidth="60.0" />
+                                            </columnConstraints>
+                                            <Label styleClass="card-subtitle" text="Rezervasyon ID:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                            <Label fx:id="lblIptalEdilecekRezId" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                            <Label styleClass="card-subtitle" text="Müşteri &amp; Oda:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                            <Label fx:id="lblIptalEdilecekMusteriOda" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                            <Label styleClass="card-subtitle" text="Tarih Aralığı:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                            <Label fx:id="lblIptalEdilecekTarihler" styleClass="field-label" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        </GridPane>
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnRezervasyonIptalOnayla" onAction="#onRezervasyonIptalOnaylaAction"
+                                                styleClass="btn-danger" text="✕ Rezervasyonu İptal Et" />
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Sağ: İptal Bilgilendirme & Son İptaller -->
+                                <VBox spacing="14.0" styleClass="card" GridPane.columnIndex="1">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="İptal Kuralları &amp; İşlem Kayıtları" />
+                                        <Label styleClass="card-subtitle"
+                                               text="İptal edilen rezervasyonların durumu 'İptal' olarak güncellenir ve oda tarih çakışmasından düşer." />
+                                    </VBox>
+                                    <ListView fx:id="listSonIptalEdilenler" prefHeight="300.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- ======================================================================
+                         12. BORÇ GÖRÜNTÜLE VE BORÇ ÖDE EKRANI (Sql.borcGoruntule & Sql.borcOde)
+                         ====================================================================== -->
+                    <ScrollPane fx:id="viewBorcIslemleri" fitToWidth="true" styleClass="content-scroll" visible="false">
+                        <VBox spacing="20.0" styleClass="screen-container">
+                            <GridPane hgap="22.0" vgap="20.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="55.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="45.0" />
+                                </columnConstraints>
+
+                                <!-- Sol: Borç Sorgulama ve Borç Listesi (Sql.borcGoruntule) -->
+                                <VBox spacing="16.0" styleClass="card" GridPane.columnIndex="0">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Müşteri Borç Görüntüleme" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Müşterinin telefon numarasını girerek ödenmemiş (odendi_mi = 0) rezervasyon borçlarını listeleyin." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Müşteri Telefon Numarası *" />
+                                        <HBox spacing="10.0">
+                                            <TextField fx:id="txtBorcSorguTelefon" HBox.hgrow="ALWAYS"
+                                                       promptText="Borcu sorgulanacak müşterinin telefon numarası..." />
+                                            <Button fx:id="btnBorcGoruntule" onAction="#onBorcGoruntuleAction"
+                                                    styleClass="btn-primary" text="🔍 Borç Görüntüle" />
+                                        </HBox>
+                                    </VBox>
+
+                                    <Label styleClass="field-label" text="Bulunan Ödenmemiş Borç Kayıtları (Sql.borcGoruntule Çıktısı)" />
+                                    <ListView fx:id="listMusteriBorclari" prefHeight="280.0" VBox.vgrow="ALWAYS" />
+                                </VBox>
+
+                                <!-- Sağ: Borç Ödeme / Tahsilat Paneli (Sql.borcOde) -->
+                                <VBox spacing="18.0" styleClass="card" GridPane.columnIndex="1">
+                                    <VBox spacing="4.0" styleClass="section-divider">
+                                        <Label styleClass="card-title" text="Borç Ödeme &amp; Tahsilat Onayı" />
+                                        <Label styleClass="card-subtitle"
+                                               text="Müşterinin açık rezervasyon borçlarını tahsil ederek 'odendi_mi = 1' olarak güncelleyin." />
+                                    </VBox>
+
+                                    <VBox spacing="8.0" styleClass="invoice-total-box">
+                                        <Label styleClass="kpi-label" text="SEÇİLİ MÜŞTERİ TOPLAM AÇIK BORÇ" />
+                                        <Label fx:id="lblBorcToplamTutar" styleClass="kpi-value-danger" text="₺0,00" />
+                                        <Label fx:id="lblBorcKayitAdedi" styleClass="card-subtitle" text="Ödenmemiş 0 adet rezervasyon kaydı" />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Tahsilat Yapılacak Telefon Numarası *" />
+                                        <TextField fx:id="txtBorcOdemeTelefon"
+                                                   promptText="Ödeme yapan müşterinin telefon numarası..." />
+                                    </VBox>
+
+                                    <VBox spacing="6.0">
+                                        <Label styleClass="field-label" text="Tahsilat / Ödeme Yöntemi" />
+                                        <ComboBox fx:id="cmbBorcOdemeYontemi" maxWidth="Infinity" />
+                                    </VBox>
+
+                                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                        <Button fx:id="btnBorcOdeOnayla" onAction="#onBorcOdeOnaylaAction"
+                                                styleClass="btn-success" text="₺ Borcu Öde (Tahsilatı Tamamla)" />
+                                    </HBox>
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+
+                </StackPane>
+            </center>
+        </BorderPane>
+    </center>
+</BorderPane>

@@ -31,9 +31,7 @@ public class Sql {
             CREATE TABLE IF NOT EXISTS odalar (
                 oda_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 oda_no TEXT NOT NULL,
-                oda_tip TEXT NOT NULL,
                 oda_kapasite INTEGER NOT NULL,
-                gunluk_ucret REAL NOT NULL,
                 oda_durum TEXT DEFAULT 'Müsait'
             )
             """, """
@@ -88,6 +86,9 @@ public class Sql {
             for (String sql : tablolar) {
                 st.execute(sql);
             }
+            // Eski Otel.db şemasında oda_tip ve gunluk_ucret sütunları kalmışsa otomatik kaldır
+            try { st.execute("ALTER TABLE odalar DROP COLUMN oda_tip"); } catch (SQLException ignored) {}
+            try { st.execute("ALTER TABLE odalar DROP COLUMN gunluk_ucret"); } catch (SQLException ignored) {}
         }
     }
 
@@ -118,14 +119,12 @@ public class Sql {
 
     public void odaEkle(@NotNull Odalar odalar) throws SQLException {
         String sql = """
-                INSERT INTO odalar(oda_no, oda_tip, oda_kapasite, gunluk_ucret)
-                VALUES(?, ?, ?, ?)
+                INSERT INTO odalar(oda_no, oda_kapasite)
+                VALUES(?, ?)
                 """;
         try (Connection conn = baglantiSagla(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, odalar.getOda_no());
-            pstmt.setString(2, odalar.getOda_tip());
-            pstmt.setInt(3, odalar.getOda_kapasite());
-            pstmt.setDouble(4, odalar.getGunluk_ucret());
+            pstmt.setInt(2, odalar.getOda_kapasite());
 
             pstmt.executeUpdate();
 
@@ -543,21 +542,22 @@ public class Sql {
         }
     }
 
-    public void temizlikTamamlandi(String odaNo)throws SQLException{
+    public boolean temizlikTamamlandi(String odaNo)throws SQLException{
         String sql = """
                 UPDATE odalar
                 SET oda_durum = 'Müsait'
                 WHERE oda_no = ?
                 """;
-
+        int etkilenen = 0;
         try(Connection conn = baglantiSagla();
             PreparedStatement pstmt = conn.prepareStatement(sql)){
             pstmt.setString(1, odaNo);
-            int etkilenen = pstmt.executeUpdate();
+            etkilenen = pstmt.executeUpdate();
             if(etkilenen == 0){
                 System.out.println("Girdiğiniz oda numarasına sahip oda yok");
             }
         }
+        return etkilenen > 0;
     }
 
     public void gecikmisCikislariKapat() throws SQLException {
@@ -681,5 +681,129 @@ public class Sql {
             }
         }
         return borcList;
+    }
+
+    // =========================================================================
+    // ANA EKRAN (DASHBOARD) VE LİSTELER İÇİN VERİTABANI OKUMA METODLARI
+    // =========================================================================
+
+    public List<Odalar> tumOdalariGetir() throws SQLException {
+        String sql = "SELECT oda_id, oda_no, oda_kapasite, oda_durum FROM odalar ORDER BY oda_no ASC";
+        List<Odalar> liste = new ArrayList<>();
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                liste.add(new Odalar(
+                        rs.getInt("oda_id"),
+                        rs.getString("oda_no"),
+                        rs.getInt("oda_kapasite"),
+                        rs.getString("oda_durum")
+                ));
+            }
+        }
+        return liste;
+    }
+
+    public int bugunGirisYapacakRezSayisi() throws SQLException {
+        String sql = """
+                SELECT COUNT(*) FROM rezervasyon
+                WHERE giris_tarihi = date('now', 'localtime')
+                  AND durum = 'Onaylandi'
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public int bugunGirisYapacakInsanSayisi() throws SQLException {
+        String sql = """
+                SELECT COUNT(r.rezervasyon_id) + COUNT(rm.musteri_id)
+                FROM rezervasyon r
+                LEFT JOIN rezervasyon_misafir rm ON r.rezervasyon_id = rm.rezervasyon_id
+                WHERE r.giris_tarihi = date('now', 'localtime')
+                  AND r.durum = 'Onaylandi'
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public int bugunCikisYapacakOdaSayisi() throws SQLException {
+        String sql = """
+                SELECT COUNT(*) FROM rezervasyon
+                WHERE cikis_tarihi = date('now', 'localtime')
+                  AND durum = 'Aktif'
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public int bugunCikisYapacakInsanSayisi() throws SQLException {
+        String sql = """
+                SELECT COUNT(r.rezervasyon_id) + COUNT(rm.musteri_id)
+                FROM rezervasyon r
+                LEFT JOIN rezervasyon_misafir rm ON r.rezervasyon_id = rm.rezervasyon_id
+                WHERE r.cikis_tarihi = date('now', 'localtime')
+                  AND r.durum = 'Aktif'
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public double toplamOdenenCiroGetir() throws SQLException {
+        String sql = """
+                SELECT COALESCE(SUM(toplam_ucret), 0)
+                FROM rezervasyon
+                WHERE odendi_mi = 1
+                  AND durum != 'İptal' AND durum != 'Iptal'
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        }
+        return 0.0;
+    }
+
+    public double bekleyenToplamBorcGetir() throws SQLException {
+        String sql = """
+                SELECT COALESCE(SUM(toplam_ucret), 0)
+                FROM rezervasyon
+                WHERE odendi_mi = 0
+                  AND durum != 'İptal' AND durum != 'Iptal'
+                """;
+        try (Connection conn = baglantiSagla();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        }
+        return 0.0;
     }
 }

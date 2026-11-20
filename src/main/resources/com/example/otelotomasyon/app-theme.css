@@ -1,0 +1,895 @@
+/* ==========================================================================
+   OTEL OTOMASYON - KURUMSAL PMS ARAYÜZ TEMA MİMARİSİ (LIGHT & DARK MODE HAZIR)
+   ==========================================================================
+   Tüm renkler .root altında semantik token olarak tanımlanmıştır.
+   Kök elemana ".theme-dark" sınıfı eklendiğinde hiçbir bileşen koduna
+   dokunulmadan tüm uygulama Koyu Tema'ya (Dark Mode) geçer.
+   ========================================================================== */
+
+.root {
+    /* Temel Yüzey ve Arka Plan Tokenları (Light Mode) */
+    -bg-canvas: #F1F5F9;
+    -bg-surface: #FFFFFF;
+    -bg-subtle: #F8FAFC;
+    -bg-muted: #E2E8F0;
+    -bg-hover: #F1F5F9;
+    -bg-input: #FFFFFF;
+
+    /* Sol Menü (Sidebar) Tokenları */
+    -bg-sidebar: #0F172A;
+    -bg-sidebar-elevated: #1E293B;
+    -bg-sidebar-hover: #1E293B;
+    -bg-sidebar-active: #2563EB;
+    -border-sidebar: #1E293B;
+    -text-sidebar: #94A3B8;
+    -text-sidebar-active: #FFFFFF;
+    -text-sidebar-muted: #64748B;
+
+    /* Kenarlık (Border) Tokenları */
+    -border-subtle: #E2E8F0;
+    -border-strong: #CBD5E1;
+    -border-focus: #2563EB;
+
+    /* Tipografi / Metin Tokenları */
+    -text-primary: #0F172A;
+    -text-secondary: #475569;
+    -text-muted: #64748B;
+    -text-on-accent: #FFFFFF;
+
+    /* Ana Vurgu (Primary Accent) Tokenları */
+    -accent-primary: #2563EB;
+    -accent-hover: #1D4ED8;
+    -accent-soft: #EFF6FF;
+    -accent-border: #BFDBFE;
+    -accent-text: #1D4ED8;
+
+    /* Semantik Durum Tokenları: Müsait / Başarılı (Emerald) */
+    -status-available-bg: #ECFDF5;
+    -status-available-border: #A7F3D0;
+    -status-available-text: #047857;
+    -status-available-dot: #10B981;
+
+    /* Semantik Durum Tokenları: Dolu / Aktif (Royal Blue) */
+    -status-occupied-bg: #EFF6FF;
+    -status-occupied-border: #BFDBFE;
+    -status-occupied-text: #1D4ED8;
+    -status-occupied-dot: #3B82F6;
+
+    /* Semantik Durum Tokenları: Temizlenecek / Uyarı (Amber) */
+    -status-cleaning-bg: #FFFBEB;
+    -status-cleaning-border: #FDE68A;
+    -status-cleaning-text: #B45309;
+    -status-cleaning-dot: #F59E0B;
+
+    /* Semantik Durum Tokenları: Bakımda / İptal / Borç (Rose) */
+    -status-danger-bg: #FFF1F2;
+    -status-danger-border: #FECDD3;
+    -status-danger-text: #BE123C;
+    -status-danger-dot: #F43F5E;
+
+    -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: -bg-canvas;
+}
+
+/* ==========================================================================
+   DARK MODE TOKEN OVERRIDES (.theme-dark)
+   ========================================================================== */
+.root.theme-dark {
+    -bg-canvas: #0B0F19;
+    -bg-surface: #111827;
+    -bg-subtle: #1E293B;
+    -bg-muted: #334155;
+    -bg-hover: #1E293B;
+    -bg-input: #0F172A;
+
+    -bg-sidebar: #060911;
+    -bg-sidebar-elevated: #0F172A;
+    -bg-sidebar-hover: #1E293B;
+    -bg-sidebar-active: #2563EB;
+    -border-sidebar: #1E293B;
+    -text-sidebar: #94A3B8;
+    -text-sidebar-active: #F8FAFC;
+    -text-sidebar-muted: #475569;
+
+    -border-subtle: #1E293B;
+    -border-strong: #334155;
+    -border-focus: #3B82F6;
+
+    -text-primary: #F8FAFC;
+    -text-secondary: #94A3B8;
+    -text-muted: #64748B;
+    -text-on-accent: #FFFFFF;
+
+    -accent-primary: #3B82F6;
+    -accent-hover: #2563EB;
+    -accent-soft: #172554;
+    -accent-border: #1E3A8A;
+    -accent-text: #60A5FA;
+
+    -status-available-bg: #064E3B;
+    -status-available-border: #065F46;
+    -status-available-text: #6EE7B7;
+    -status-available-dot: #10B981;
+
+    -status-occupied-bg: #172554;
+    -status-occupied-border: #1E3A8A;
+    -status-occupied-text: #93C5FD;
+    -status-occupied-dot: #3B82F6;
+
+    -status-cleaning-bg: #451A03;
+    -status-cleaning-border: #78350F;
+    -status-cleaning-text: #FCD34D;
+    -status-cleaning-dot: #F59E0B;
+
+    -status-danger-bg: #4C0519;
+    -status-danger-border: #881337;
+    -status-danger-text: #FDA4AF;
+    -status-danger-dot: #F43F5E;
+}
+
+/* ==========================================================================
+   GENEL LAYOUT VE SCROLLPANE
+   ========================================================================== */
+.app-shell {
+    -fx-background-color: -bg-canvas;
+}
+
+.content-scroll {
+    -fx-background-color: transparent;
+    -fx-background: -bg-canvas;
+    -fx-border-color: transparent;
+}
+
+.content-scroll > .viewport {
+    -fx-background-color: -bg-canvas;
+}
+
+.screen-container {
+    -fx-background-color: -bg-canvas;
+    -fx-padding: 24 28 32 28;
+}
+
+/* ScrollBar İnce Tasarım */
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: -border-strong;
+    -fx-background-radius: 6px;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+/* ==========================================================================
+   SOL NAVİGASYON BAR (SIDEBAR)
+   ========================================================================== */
+.sidebar {
+    -fx-background-color: -bg-sidebar;
+    -fx-border-color: -border-sidebar;
+    -fx-border-width: 0 1 0 0;
+}
+
+.sidebar-scroll {
+    -fx-background-color: transparent;
+    -fx-background: -bg-sidebar;
+    -fx-border-color: transparent;
+}
+
+.sidebar-scroll > .viewport {
+    -fx-background-color: -bg-sidebar;
+}
+
+.brand-box {
+    -fx-background-color: -bg-sidebar;
+    -fx-border-color: -border-sidebar;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 18 18 16 18;
+}
+
+.brand-badge {
+    -fx-background-color: -accent-primary;
+    -fx-background-radius: 8px;
+    -fx-min-width: 36px;
+    -fx-min-height: 36px;
+    -fx-max-width: 36px;
+    -fx-max-height: 36px;
+    -fx-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.brand-title {
+    -fx-text-fill: #F8FAFC;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.brand-subtitle {
+    -fx-text-fill: -text-sidebar;
+    -fx-font-size: 11px;
+}
+
+.nav-section-label {
+    -fx-text-fill: -text-sidebar-muted;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 14 14 4 14;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-sidebar;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 9 14 9 14;
+    -fx-background-radius: 7px;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 10px;
+}
+
+.nav-btn:hover {
+    -fx-background-color: -bg-sidebar-hover;
+    -fx-text-fill: #F8FAFC;
+}
+
+.nav-btn-active {
+    -fx-background-color: -bg-sidebar-active;
+    -fx-text-fill: -text-sidebar-active;
+    -fx-font-weight: bold;
+}
+
+.nav-btn-active:hover {
+    -fx-background-color: -accent-hover;
+    -fx-text-fill: -text-sidebar-active;
+}
+
+.sidebar-footer {
+    -fx-background-color: -bg-sidebar;
+    -fx-border-color: -border-sidebar;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 12 14 14 14;
+}
+
+.nav-btn-theme {
+    -fx-background-color: -bg-sidebar-elevated;
+    -fx-text-fill: #E2E8F0;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 6px;
+    -fx-border-color: #334155;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.nav-btn-theme:hover {
+    -fx-background-color: #334155;
+}
+
+.nav-btn-exit {
+    -fx-background-color: transparent;
+    -fx-text-fill: #FDA4AF;
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER;
+    -fx-padding: 7 12 7 12;
+    -fx-background-radius: 6px;
+    -fx-border-color: #881337;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.nav-btn-exit:hover {
+    -fx-background-color: #4C0519;
+    -fx-text-fill: #FFE4E6;
+}
+
+/* ==========================================================================
+   ÜST BAR (TOP HEADER BAR)
+   ========================================================================== */
+.topbar {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 14 28 14 28;
+}
+
+.topbar-title {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.topbar-subtitle {
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 12px;
+}
+
+.topbar-pill {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-subtle;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 6 12 6 12;
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.topbar-db-pill {
+    -fx-background-color: -status-available-bg;
+    -fx-border-color: -status-available-border;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 6 12 6 12;
+    -fx-text-fill: -status-available-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* ==========================================================================
+   KARTLAR VE YÜZEYLER (CARDS & PANELS)
+   ========================================================================== */
+.card {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 20px;
+}
+
+.card-subtle {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+}
+
+.card-accent {
+    -fx-background-color: -accent-soft;
+    -fx-border-color: -accent-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+}
+
+.card-danger-zone {
+    -fx-background-color: -status-danger-bg;
+    -fx-border-color: -status-danger-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+}
+
+.card-title {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.card-subtitle {
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 12px;
+}
+
+.section-divider {
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 12 0;
+}
+
+/* ==========================================================================
+   ANA EKRAN KPI İSTATİSTİK KARTLARI
+   ========================================================================== */
+.kpi-card {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 16 18 16 18;
+}
+
+.kpi-label {
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.kpi-value {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.kpi-value-accent {
+    -fx-text-fill: -accent-text;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.kpi-value-success {
+    -fx-text-fill: -status-available-text;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.kpi-value-warning {
+    -fx-text-fill: -status-cleaning-text;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.kpi-value-danger {
+    -fx-text-fill: -status-danger-text;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.kpi-meta {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11px;
+}
+
+/* ==========================================================================
+   ODA TEMSİL KARTLARI (ROOM GRID CARDS) & DURUM ROZETLERİ (BADGES)
+   ========================================================================== */
+.room-card {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 1px;
+    -fx-border-radius: 9px;
+    -fx-background-radius: 9px;
+    -fx-padding: 14px;
+    -fx-pref-width: 215px;
+    -fx-cursor: hand;
+}
+
+.room-card:hover {
+    -fx-border-color: -accent-primary;
+    -fx-background-color: -bg-subtle;
+}
+
+.room-card-available {
+    -fx-border-color: -status-available-border;
+    -fx-border-width: 1 1 1 4;
+}
+
+.room-card-occupied {
+    -fx-border-color: -status-occupied-border;
+    -fx-border-width: 1 1 1 4;
+}
+
+.room-card-cleaning {
+    -fx-border-color: -status-cleaning-border;
+    -fx-border-width: 1 1 1 4;
+}
+
+.room-card-maintenance {
+    -fx-border-color: -status-danger-border;
+    -fx-border-width: 1 1 1 4;
+}
+
+.room-no-label {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.room-type-label {
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 12px;
+}
+
+.room-price-label {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.room-guest-label {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11px;
+}
+
+/* Durum Rozetleri (Badges) */
+.badge {
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-border-width: 1px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-available {
+    -fx-background-color: -status-available-bg;
+    -fx-border-color: -status-available-border;
+    -fx-text-fill: -status-available-text;
+}
+
+.badge-occupied {
+    -fx-background-color: -status-occupied-bg;
+    -fx-border-color: -status-occupied-border;
+    -fx-text-fill: -status-occupied-text;
+}
+
+.badge-cleaning {
+    -fx-background-color: -status-cleaning-bg;
+    -fx-border-color: -status-cleaning-border;
+    -fx-text-fill: -status-cleaning-text;
+}
+
+.badge-danger {
+    -fx-background-color: -status-danger-bg;
+    -fx-border-color: -status-danger-border;
+    -fx-text-fill: -status-danger-text;
+}
+
+.badge-neutral {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-strong;
+    -fx-text-fill: -text-secondary;
+}
+
+/* ==========================================================================
+   FORM ELEMANLARI (INPUTS, COMBOBOX, DATEPICKER, TEXTAREA)
+   ========================================================================== */
+.field-label {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.field-hint {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11px;
+}
+
+.form-input,
+.text-field,
+.text-area,
+.combo-box-base,
+.date-picker {
+    -fx-background-color: -bg-input;
+    -fx-border-color: -border-strong;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -text-primary;
+    -fx-prompt-text-fill: -text-muted;
+    -fx-font-size: 13px;
+}
+
+.text-field,
+.combo-box-base,
+.date-picker {
+    -fx-padding: 7 11 7 11;
+    -fx-pref-height: 36px;
+}
+
+.text-area {
+    -fx-padding: 6 8 6 8;
+}
+
+.text-area .content {
+    -fx-background-color: -bg-input;
+    -fx-background-radius: 5px;
+}
+
+.text-field:focused,
+.text-area:focused,
+.combo-box-base:focused,
+.date-picker:focused {
+    -fx-border-color: -border-focus;
+    -fx-background-color: -bg-input;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: -text-primary;
+    -fx-background-color: transparent;
+    -fx-padding: 2 4 2 4;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-strong;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: -text-primary;
+    -fx-background-color: -bg-surface;
+    -fx-padding: 7 10 7 10;
+}
+
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: -accent-soft;
+    -fx-text-fill: -accent-text;
+}
+
+.date-picker > .text-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 6 0 4;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.check-box {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 13px;
+}
+
+.check-box .box {
+    -fx-background-color: -bg-input;
+    -fx-border-color: -border-strong;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.check-box:selected .box {
+    -fx-background-color: -accent-primary;
+    -fx-border-color: -accent-primary;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
+
+.radio-button {
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 13px;
+}
+
+.radio-button .radio {
+    -fx-background-color: -bg-input;
+    -fx-border-color: -border-strong;
+    -fx-border-radius: 10px;
+}
+
+.radio-button:selected .radio {
+    -fx-border-color: -accent-primary;
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: -accent-primary;
+}
+
+/* ==========================================================================
+   BUTONLAR (BUTTONS)
+   ========================================================================== */
+.btn-primary {
+    -fx-background-color: -accent-primary;
+    -fx-text-fill: -text-on-accent;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18 8 18;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+    -fx-pref-height: 36px;
+}
+
+.btn-primary:hover {
+    -fx-background-color: -accent-hover;
+}
+
+.btn-secondary {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-strong;
+    -fx-border-width: 1px;
+    -fx-text-fill: -text-primary;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+    -fx-pref-height: 36px;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: -bg-muted;
+}
+
+.btn-success {
+    -fx-background-color: #059669;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18 8 18;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-pref-height: 36px;
+}
+
+.btn-success:hover {
+    -fx-background-color: #047857;
+}
+
+.btn-danger {
+    -fx-background-color: #E11D48;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18 8 18;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-pref-height: 36px;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #BE123C;
+}
+
+.btn-warning {
+    -fx-background-color: #D97706;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18 8 18;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-pref-height: 36px;
+}
+
+.btn-warning:hover {
+    -fx-background-color: #B45309;
+}
+
+/* Filtre Çipleri (Filter Chips) */
+.filter-chip {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-strong;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 5 12 5 12;
+    -fx-cursor: hand;
+}
+
+.filter-chip:hover {
+    -fx-background-color: -bg-muted;
+    -fx-text-fill: -text-primary;
+}
+
+.filter-chip-active {
+    -fx-background-color: -accent-soft;
+    -fx-border-color: -accent-primary;
+    -fx-text-fill: -accent-text;
+}
+
+/* ==========================================================================
+   TABLO VE LİSTE GÖRÜNÜMLERİ (TABLEVIEW & LISTVIEW)
+   ========================================================================== */
+.table-view,
+.list-view {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 8 10 8 10;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-row-cell {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 38px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: -bg-subtle;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: -accent-soft;
+}
+
+.table-cell {
+    -fx-text-fill: -text-primary;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10 0 10;
+}
+
+.list-cell {
+    -fx-background-color: -bg-surface;
+    -fx-text-fill: -text-primary;
+    -fx-padding: 10 12 10 12;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 0 0 1 0;
+}
+
+.list-cell:filled:selected,
+.list-cell:filled:hover {
+    -fx-background-color: -accent-soft;
+    -fx-text-fill: -accent-text;
+}
+
+/* ==========================================================================
+   FATURA BELGESİ ÖNİZLEME TASARIMI (INVOICE DOCUMENT CARD)
+   ========================================================================== */
+.invoice-paper {
+    -fx-background-color: -bg-surface;
+    -fx-border-color: -border-strong;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 28px;
+}
+
+.invoice-header-band {
+    -fx-background-color: -bg-subtle;
+    -fx-border-color: -border-subtle;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+}
+
+.invoice-total-box {
+    -fx-background-color: -accent-soft;
+    -fx-border-color: -accent-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 14 20 14 20;
+}
+
+/* ProgressBar */
+.progress-bar {
+    -fx-pref-height: 8px;
+}
+
+.progress-bar > .track {
+    -fx-background-color: -bg-muted;
+    -fx-background-radius: 4px;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: -accent-primary;
+    -fx-background-radius: 4px;
+    -fx-background-insets: 0;
+}
