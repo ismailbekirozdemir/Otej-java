@@ -5,8 +5,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -18,7 +16,7 @@ public class HelloApplication extends Application {
 
         String path = "/com/example/otelotomasyon/main-view.fxml";
 
-        URL url = Main.class.getResource(path);
+        URL url = getClass().getResource(path);
 
         if (url == null) {
             throw new RuntimeException("FXML DOSYASI BULUNAMADI!");
@@ -44,8 +42,7 @@ public class HelloApplication extends Application {
         }catch (NullPointerException e){
             System.out.println(e.getMessage());
         }
-        stage.setFullScreen(true);
-        stage.setFullScreenExitKeyCombination(KeyCombination.keyCombination("A"));
+        stage.setMaximized(true);
         stage.setMinWidth(1024);
         stage.setMinHeight(680);
 

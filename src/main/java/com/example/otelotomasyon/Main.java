@@ -58,8 +58,7 @@ public class Main extends Application {
         }catch (NullPointerException e){
             System.out.println(e.getMessage());
         }
-        stage.setFullScreen(true);
-        stage.setFullScreenExitKeyCombination(KeyCombination.keyCombination("A"));
+        stage.setMaximized(true);
         stage.setMinWidth(1024);
         stage.setMinHeight(680);
 

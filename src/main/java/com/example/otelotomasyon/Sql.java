@@ -1,6 +1,9 @@
 package com.example.otelotomasyon;
 
 import org.jetbrains.annotations.NotNull;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -8,15 +11,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Sql {
+    private final Path dbPath;
+    private final String dbUrl;
+
     public Sql() throws SQLException {
+        this.dbPath = dbYolunuHazirla();
+        this.dbUrl = "jdbc:sqlite:" + this.dbPath.toAbsolutePath();
         try (Connection conn = baglantiSagla()) {
             veritabaniOlustur(conn);
         }
     }
 
+    public Path getDbPath() {
+        return dbPath;
+    }
+
+    private static Path dbYolunuHazirla() throws SQLException {
+        String envPath = System.getenv("OTEL_DB_PATH");
+        Path hedef = (envPath != null && !envPath.isBlank())
+                ? Path.of(envPath.trim())
+                : Path.of(System.getProperty("user.home"), "OtelOtomasyon", "Otel.db");
+        try {
+            if (hedef.getParent() != null) {
+                Files.createDirectories(hedef.getParent());
+            }
+            Path eskiDb = Path.of("Otel.db");
+            if (!Files.exists(hedef) && Files.exists(eskiDb)) {
+                Files.copy(eskiDb, hedef);
+            }
+        } catch (IOException e) {
+            throw new SQLException("Veritabanı klasörü hazırlanamadı: " + e.getMessage(), e);
+        }
+        return hedef;
+    }
+
     private Connection baglantiSagla() throws SQLException {
-        final String url = "jdbc:sqlite:Otel.db";
-        Connection conn = DriverManager.getConnection(url);
+        Connection conn = DriverManager.getConnection(this.dbUrl);
         try (Statement st = conn.createStatement()) {
             st.execute("PRAGMA foreign_keys = ON");
         } catch (SQLException e) {
@@ -41,7 +71,7 @@ public class Sql {
                 soyad TEXT NOT NULL,
                 tc_kimlik TEXT NOT NULL UNIQUE,
                 telefon TEXT NOT NULL UNIQUE,
-                age INTEGER NOT NULL,
+                dogum_tarihi DATE NOT NULL,
                 email TEXT UNIQUE
             )
             """, """
@@ -86,33 +116,37 @@ public class Sql {
             for (String sql : tablolar) {
                 st.execute(sql);
             }
-            // Eski Otel.db şemasında oda_tip ve gunluk_ucret sütunları kalmışsa otomatik kaldır
-            try { st.execute("ALTER TABLE odalar DROP COLUMN oda_tip"); } catch (SQLException ignored) {}
-            try { st.execute("ALTER TABLE odalar DROP COLUMN gunluk_ucret"); } catch (SQLException ignored) {}
         }
+    }
+
+    private int sonEklenenIdGetir(Connection conn) throws SQLException {
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT last_insert_rowid()")) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return -1;
     }
 
     public void musteriEkle(@NotNull Musteri musteri) throws SQLException {
         String sql = """
-                INSERT INTO musteri (ad, soyad, tc_kimlik, telefon, age, email)
+                INSERT INTO musteri (ad, soyad, tc_kimlik, telefon, dogum_tarihi, email)
                 VALUES(?, ?, ?, ?, ?, ?)
                 """;
-        try (Connection conn = baglantiSagla(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = baglantiSagla(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, musteri.getAd());
             pstmt.setString(2, musteri.getSoyad());
             pstmt.setString(3, musteri.getTcKimlik());
             pstmt.setString(4, musteri.getTelefon());
-            pstmt.setInt(5, musteri.getYas());
+            pstmt.setString(5, musteri.getDogumTarihi().toString());
             pstmt.setString(6, musteri.getEmail());
 
             pstmt.executeUpdate();
-
-            try(ResultSet rs = pstmt.getGeneratedKeys()){
-                if(rs.next()){
-                    int olusanId = rs.getInt(1);
-                    musteri.setMusteriId(olusanId);
-                }
+            int olusanId = sonEklenenIdGetir(conn);
+            if (olusanId > 0) {
+                musteri.setMusteriId(olusanId);
             }
         }
     }
@@ -122,16 +156,14 @@ public class Sql {
                 INSERT INTO odalar(oda_no, oda_kapasite)
                 VALUES(?, ?)
                 """;
-        try (Connection conn = baglantiSagla(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = baglantiSagla(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, odalar.getOda_no());
             pstmt.setInt(2, odalar.getOda_kapasite());
 
             pstmt.executeUpdate();
-
-            try(ResultSet rs = pstmt.getGeneratedKeys()){
-                if(rs.next()){
-                    odalar.setOdaId(rs.getInt(1));
-                }
+            int olusanId = sonEklenenIdGetir(conn);
+            if (olusanId > 0) {
+                odalar.setOdaId(olusanId);
             }
         }
     }
@@ -144,7 +176,7 @@ public class Sql {
                 """;
 
         try(Connection conn = baglantiSagla();
-            PreparedStatement pstmtm = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+            PreparedStatement pstmtm = conn.prepareStatement(sql)){
 
             pstmtm.setInt(1, rezervasyon.getMusteriId());
             pstmtm.setInt(2, rezervasyon.getOdaId());
@@ -154,16 +186,12 @@ public class Sql {
             pstmtm.setBoolean(6, rezervasyon.isOdendiMi());
 
             pstmtm.executeUpdate();
-
-            try(ResultSet rs = pstmtm.getGeneratedKeys()){
-                if(rs.next()){
-                    int olusanRezId = rs.getInt(1);
-                    rezervasyon.setRezId(olusanRezId);
-                    return olusanRezId;
-                }
+            int olusanRezId = sonEklenenIdGetir(conn);
+            if (olusanRezId > 0) {
+                rezervasyon.setRezId(olusanRezId);
             }
+            return olusanRezId;
         }
-        return -1;
     }
 
     public boolean odaMusaitMi(int odaId, LocalDate yeniGiris, LocalDate yeniCikis) throws SQLException {
@@ -174,7 +202,7 @@ public class Sql {
         String sql = """
                 SELECT COUNT(*) FROM rezervasyon
                 WHERE oda_id = ?
-                    AND durum != 'Iptal'
+                    AND durum NOT IN ('İptal', 'Iptal')
                     AND rezervasyon_id != ?
                     AND giris_tarihi < ?
                     AND cikis_tarihi > ?
@@ -235,7 +263,7 @@ public class Sql {
             FROM rezervasyon r
             JOIN musteri m ON r.musteri_id = m.musteri_id
             WHERE m.tc_kimlik = ?
-              AND r.durum != 'Iptal'
+              AND r.durum NOT IN ('İptal', 'Iptal')
             ORDER BY r.giris_tarihi DESC
             LIMIT 1
             """;
@@ -260,6 +288,7 @@ public class Sql {
                 FROM rezervasyon r
                 JOIN musteri m ON r.musteri_id = m.musteri_id
                 WHERE m.telefon = ?
+                  AND r.durum NOT IN ('İptal', 'Iptal')
                 ORDER BY r.rezervasyon_id DESC
                 LIMIT 1
                 """;
@@ -268,14 +297,14 @@ public class Sql {
             pstmt.setString(1, telefon);
             try(ResultSet rs = pstmt.executeQuery()){
                 if(rs.next()){
-                    LocalDate giris = rs.getObject("giris_tarihi", LocalDate.class);
-                    LocalDate cikis = rs.getObject("cikis_tarihi", LocalDate.class);
+                    LocalDate giris = LocalDate.parse(rs.getString("giris_tarihi").substring(0, 10));
+                    LocalDate cikis = LocalDate.parse(rs.getString("cikis_tarihi").substring(0, 10));
 
-                    long gunSayisi = ChronoUnit.DAYS.between(giris, cikis);
-                    double toplamUCret = rs.getDouble("toplam_ucret");
-                    double gecelikUcret = toplamUCret / gunSayisi;
+                    long gunSayisi = Math.max(1, ChronoUnit.DAYS.between(giris, cikis));
+                    double toplamUcret = rs.getDouble("toplam_ucret");
+                    double gecelikUcret = toplamUcret / gunSayisi;
 
-                    return new Rezervasyon(
+                    Rezervasyon rez = new Rezervasyon(
                             rs.getInt("musteri_id"),
                             rs.getInt("oda_id"),
                             giris,
@@ -283,6 +312,9 @@ public class Sql {
                             gecelikUcret,
                             rs.getBoolean("odendi_mi")
                             );
+                    rez.setRezId(rs.getInt("rezervasyon_id"));
+                    rez.setDurum(rs.getString("durum"));
+                    return rez;
                 }
             }
         }
@@ -317,7 +349,7 @@ public class Sql {
                 VALUES(?, ?, ?, ?, ?, ?)
                 """;
         try (Connection conn = baglantiSagla();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, fatura.getRezervasyonId());
             pstmt.setString(2, fatura.getFaturaBasligi());
@@ -328,15 +360,12 @@ public class Sql {
 
             pstmt.executeUpdate();
 
-            try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    int olusanFaturaId = rs.getInt(1);
-                    fatura.setFaturaId(olusanFaturaId);
-                    return olusanFaturaId;
-                }
+            int olusanFaturaId = sonEklenenIdGetir(conn);
+            if (olusanFaturaId > 0) {
+                fatura.setFaturaId(olusanFaturaId);
             }
+            return olusanFaturaId;
         }
-        return -1;
     }
 
     public double rezToplamUcretGetir(int rezId)throws SQLException{
@@ -383,7 +412,10 @@ public class Sql {
             pstmt.setString(1, telefon);
             try(ResultSet rs = pstmt.executeQuery()){
                 if(rs.next()){
-                    LocalDate faturaTarihi = LocalDate.parse(rs.getString("fatura_tarihi"));
+                    String tarihStr = rs.getString("fatura_tarihi");
+                    LocalDate faturaTarihi = (tarihStr != null && tarihStr.length() >= 10)
+                            ? LocalDate.parse(tarihStr.substring(0, 10))
+                            : LocalDate.now();
                     return new Fatura(
                             rs.getInt("fatura_id"),
                             rs.getInt("rezervasyon_id"),
@@ -400,7 +432,7 @@ public class Sql {
         return null;
     }
 
-    public void odaDurumDuzenle(String durum, String tcKimlik)throws SQLException{
+    public boolean odaDurumDuzenle(String durum, String tcKimlik)throws SQLException{
         String sql = """
                 UPDATE odalar
                 SET oda_durum = ?
@@ -408,7 +440,7 @@ public class Sql {
                 JOIN musteri m ON r.musteri_id = m.musteri_id
                 WHERE odalar.oda_id = r.oda_id
                     AND m.tc_kimlik = ?
-                    AND r.durum != 'Iptal'
+                    AND r.durum NOT IN ('İptal', 'Iptal')
                 """;
         try(Connection conn = baglantiSagla();
             PreparedStatement pstmt = conn.prepareStatement(sql)){
@@ -416,13 +448,7 @@ public class Sql {
             pstmt.setString(2, tcKimlik);
 
             int etkilenenSatir = pstmt.executeUpdate();
-
-            if(etkilenenSatir > 0){
-                System.out.println("Oda durumu güncellendi.");
-            }
-            else {
-                System.out.println("Müşteriye ait rezervasyon bulunamadı.");
-            }
+            return etkilenenSatir > 0;
         }
      }
 
@@ -594,43 +620,82 @@ public class Sql {
         }
     }
 
-    public void rezIptal(String telefon)throws SQLException {
-        String sqlRezId = """
-                SELECT r.rezervasyon_id
+    public boolean rezIptal(String telefon) throws SQLException {
+        String sqlRezBul = """
+                SELECT r.rezervasyon_id, r.oda_id
                 FROM rezervasyon r
                 JOIN musteri m ON r.musteri_id = m.musteri_id
-                WHERE telefon = ?
-                    AND r.durum != 'İptal'
+                WHERE m.telefon = ?
+                  AND r.durum NOT IN ('İptal', 'Iptal', 'Tamamlandı')
                 ORDER BY r.rezervasyon_id DESC
+                LIMIT 1
                 """;
         String sqlIptal = """
                 UPDATE rezervasyon
                 SET durum = 'İptal'
                 WHERE rezervasyon_id = ?
                 """;
-        try (Connection conn = baglantiSagla();
-             PreparedStatement pstmt = conn.prepareStatement(sqlRezId)) {
-            pstmt.setString(1, telefon);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    int rezId = rs.getInt("rezervasyon_id");
-                    try (PreparedStatement pstmtIptal = conn.prepareStatement(sqlIptal)) {
-                        pstmtIptal.setInt(1, rezId);
-                        pstmtIptal.executeUpdate();
+        String sqlOdaBosalt = """
+                UPDATE odalar
+                SET oda_durum = 'Müsait'
+                WHERE oda_id = ?
+                  AND oda_durum = 'Dolu'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM rezervasyon
+                      WHERE oda_id = ? AND durum = 'Aktif'
+                  )
+                """;
+        try (Connection conn = baglantiSagla()) {
+            conn.setAutoCommit(false);
+            try {
+                int rezId = -1;
+                int odaId = -1;
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlRezBul)) {
+                    pstmt.setString(1, telefon);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            rezId = rs.getInt("rezervasyon_id");
+                            odaId = rs.getInt("oda_id");
+                        }
                     }
                 }
+
+                if (rezId == -1) {
+                    conn.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement pstmtIptal = conn.prepareStatement(sqlIptal)) {
+                    pstmtIptal.setInt(1, rezId);
+                    pstmtIptal.executeUpdate();
+                }
+
+                try (PreparedStatement pstmtOda = conn.prepareStatement(sqlOdaBosalt)) {
+                    pstmtOda.setInt(1, odaId);
+                    pstmtOda.setInt(2, odaId);
+                    pstmtOda.executeUpdate();
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         }
     }
 
     public int odendiMi(String telefon)throws SQLException{
         String sql = """
-                SELECT odendi_mi
+                SELECT r.odendi_mi
                 FROM rezervasyon r
                 JOIN musteri m ON r.musteri_id = m.musteri_id
                 WHERE m.telefon = ?
-                    AND r.cikis_tarihi = date('now', 'localtime')
+                  AND r.durum NOT IN ('İptal', 'Iptal')
+                ORDER BY r.rezervasyon_id DESC
+                LIMIT 1
                 """;
         try(Connection conn = baglantiSagla();
             PreparedStatement ps = conn.prepareStatement(sql)){
@@ -653,7 +718,7 @@ public class Sql {
                     FROM musteri
                     WHERE telefon = ?
                 )
-                AND durum != 'İptal'
+                AND durum NOT IN ('İptal', 'Iptal')
                 AND odendi_mi = 0
                 """;
         try(Connection conn = baglantiSagla();
@@ -670,7 +735,7 @@ public class Sql {
                 FROM rezervasyon r
                 JOIN musteri m ON m.musteri_id = r.musteri_id
                 WHERE m.telefon = ?
-                    ANd r.durum != 'İptal'
+                    AND r.durum NOT IN ('İptal', 'Iptal')
                     AND r.odendi_mi = 0
                 """;
 
@@ -827,9 +892,11 @@ public class Sql {
 
         try(Connection conn = baglantiSagla();
             PreparedStatement ps = conn.prepareStatement(sql)){
-            ResultSet rs = ps.executeQuery();
-            if(rs.next()){
-                return rs.getString("tc_kimlik");
+            ps.setInt(1, musteriId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("tc_kimlik");
+                }
             }
         }
         return null;
@@ -843,10 +910,11 @@ public class Sql {
                 """;
         try(Connection conn = baglantiSagla();
             PreparedStatement ps = conn.prepareStatement(sql)){
-
-            ResultSet rs = ps.executeQuery();
-            if(rs.next()){
-                return rs.getInt("oda_no");
+            ps.setInt(1, odaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("oda_no");
+                }
             }
         }
         return -1;

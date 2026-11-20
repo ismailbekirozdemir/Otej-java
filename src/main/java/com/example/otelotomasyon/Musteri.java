@@ -1,30 +1,32 @@
 package com.example.otelotomasyon;
 
+import java.time.LocalDate;
+
 public class Musteri {
     private int musteriId;
     private String ad;
     private String soyad;
     private String tcKimlik;
     private String telefon;
-    private int yas;
+    private LocalDate dogumTarihi;
     private String email;
 
-    public Musteri(int musteriId, String ad, String soyad, String tcKimlik, String telefon, int yas, String email){
+    public Musteri(int musteriId, String ad, String soyad, String tcKimlik, String telefon, LocalDate dogumTarihi, String email){
         this.musteriId = musteriId;
         this.ad = ad;
         this.soyad = soyad;
         this.tcKimlik = tcKimlik;
         this.telefon = telefon;
-        this.yas = yas;
+        this.dogumTarihi = dogumTarihi;
         this.email = email;
     }
 
-    public Musteri(String ad, String soyad, String tcKimlik, String telefon, int yas, String email){
+    public Musteri(String ad, String soyad, String tcKimlik, String telefon, LocalDate dogumTarihi, String email){
         this.ad = ad;
         this.soyad = soyad;
         this.tcKimlik = tcKimlik;
         this.telefon = telefon;
-        this.yas = yas;
+        this.dogumTarihi = dogumTarihi;
         this.email = email;
     }
 
@@ -40,14 +42,14 @@ public class Musteri {
     public String getSoyad() { return soyad; }
     public String getTcKimlik() { return tcKimlik; }
     public String getTelefon() { return telefon; }
-    public int getYas() { return yas; }
+    public LocalDate getDogumTarihi() { return dogumTarihi; }
     public String getEmail() { return email; }
 
     public void setAd(String ad){this.ad = ad;}
     public void setSoyad(String soyad){this.soyad = soyad;}
     public void setTcKimlik(String tcKimlik){this.tcKimlik = tcKimlik;}
     public void setTelefon(String telefon){this.telefon = telefon;}
-    public void setYas(int yas){this.yas = yas;}
+    public void setDogumTarihi(LocalDate dogumTarihi){this.dogumTarihi = dogumTarihi;}
     public void setEmail(String email){this.email = email;}
 
 }
